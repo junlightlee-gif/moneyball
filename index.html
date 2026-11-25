@@ -1,327 +1,93 @@
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ticker Pulse</title>
-<meta name="description" content="Daily US & Korea momentum watchlists ranked by social discussion activity. Aggregate counts only — free and open.">
-<style>
-:root {
-  color-scheme: light;
-  --page: #f9f9f7; --surface-1: #fcfcfb;
-  --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
-  --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
-  --series-1: #2a78d6; --series-2: #eb6834; --seq: #256abf;
-  --up: #006300; --down: #d03b3b; --star: #a87900;
-}
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-    --page: #0d0d0d; --surface-1: #1a1a19;
-    --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
-    --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
-    --series-1: #3987e5; --series-2: #d95926; --seq: #3987e5;
-    --up: #0ca30c; --down: #e66767; --star: #e5b53a;
-  }
-}
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --page: #0d0d0d; --surface-1: #1a1a19;
-  --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
-  --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
-  --series-1: #3987e5; --series-2: #d95926; --seq: #3987e5;
-  --up: #0ca30c; --down: #e66767; --star: #e5b53a;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0; background: var(--page); color: var(--text-primary);
-  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
-}
-.wrap { max-width: 920px; margin: 0 auto; padding: 28px 16px 48px; }
-header h1 { font-size: 22px; margin: 0 0 2px; }
-header .sub { color: var(--text-secondary); font-size: 14px; margin: 0 0 4px; }
-header .upd { color: var(--muted); font-size: 13px; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 20px 0; }
-.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-.tile .v { font-size: 26px; font-weight: 650; }
-.tile .k { color: var(--text-secondary); font-size: 13px; }
-.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 0 0 18px; }
-.card h2 { font-size: 15px; margin: 0 0 10px; font-weight: 650; }
-.scrollx { overflow-x: auto; }
-.card .note { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12.5px; padding: 4px 8px; border-bottom: 1px solid var(--grid); }
-td { padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: color-mix(in srgb, var(--series-1) 7%, transparent); }
-td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-.tk { font-weight: 650; }
-.nm { color: var(--text-secondary); font-size: 12.5px; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.meter { display: inline-block; height: 10px; border-radius: 0 4px 4px 0; background: var(--seq); vertical-align: middle; }
-.chg-up { color: var(--up); } .chg-dn { color: var(--down); }
-.spark { vertical-align: middle; }
-.hot { color: var(--series-2); font-size: 11px; }
-.star { color: var(--star); font-size: 12px; }
-.legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-secondary); margin-bottom: 6px; }
-.legend .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: baseline; }
-footer { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
-footer h3 { color: var(--text-secondary); font-size: 13px; margin: 18px 0 4px; }
-#tt { position: fixed; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
-      border-radius: 8px; padding: 6px 10px; font-size: 12.5px; box-shadow: 0 2px 8px rgba(0,0,0,.12);
-      display: none; z-index: 9; }
-#tt b { font-variant-numeric: tabular-nums; }
-@media (max-width: 560px) { .nm { display: none; } .hide-m { display: none; } }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stock Digger</title>
+<meta name="description" content="장기 모멘텀 스크리너 · 테마 머니플로우 · 4트랙 페이퍼트레이딩 공개 대시보드">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f8fafc">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛏️</text></svg>">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="wrap">
 <header>
-  <h1>Ticker Pulse</h1>
-  <p class="sub">Two filters, one list — every stock below <b>passed a rule-based technical &amp;
-  fundamental momentum screen today</b>, and is ranked by how actively people are talking about it.
-  A <span class="hot">●</span> marks stocks with live discussion mentions today. Updated daily.</p>
-  <p class="upd" id="upd"></p>
+  <div class="hrow">
+    <div class="logo">Stock <i>Digger</i></div>
+    <div class="upd" id="upd"></div>
+  </div>
+  <nav id="nav">
+    <a href="#home" data-p="home" class="on">홈</a>
+    <a href="#flow" data-p="flow">머니플로우</a>
+    <a href="#paper" data-p="paper">페이퍼트레이딩</a>
+    <a href="#pulse" data-p="pulse">펄스</a>
+  </nav>
 </header>
 
-<div class="tiles" id="tiles"></div>
+<main class="wrap">
+  <section class="page on" id="p-home">
+    <h2>오늘의 브리핑</h2>
+    <div class="sub" id="home-sub"></div>
+    <div class="grid2" id="tracks"></div>
+    <h2>개입 기준선</h2>
+    <div class="sub">롤링 21영업일 수익률 — 사전등록 기준. 발동 시 과정 점검만, 파라미터 변경 금지.</div>
+    <div class="card"><table class="base" id="basetab"></table></div>
+    <h2>테마 하이라이트</h2>
+    <div class="sub" id="hl-sub"></div>
+    <div id="highlights"></div>
+    <h2>최근 체결</h2>
+    <div class="card" id="recent"></div>
+  </section>
 
-<div class="card scrollx">
-  <h2>🇺🇸 US watchlist — ranked by StockTwits bullish messages (24h)</h2>
-  <table class="wl" id="tbl-us"></table>
-  <p class="note">Every row already passed today's technical &amp; fundamental screen — the ranking then adds the crowd:
-  bar length = bullish message count on StockTwits (24h). A <span class="star">★</span> = entry signal fired.
-  A <span class="hot">●</span> = screen pass <i>and</i> live mentions today. "Days listed" = consecutive days on
-  the screen.</p>
-</div>
+  <section class="page" id="p-flow">
+    <h2>테마 머니플로우</h2>
+    <div class="sub">쏠림 배율 = 당일 거래대금 ÷ 직전 20일 평균. 주도주 헤드라인이 테마명과 무관하면 수급 오귀속 가능성.</div>
+    <div class="seg" id="flowseg">
+      <button data-m="kr" class="on">🇰🇷 한국 테마</button>
+      <button data-m="us">🇺🇸 미국 섹터</button>
+    </div>
+    <div id="magnet"></div>
+    <div id="flowin"></div>
+    <h2 id="outtitle">자금 유출</h2>
+    <div class="sub">평소(20일 평균) 거래대금 대비 급감한 테마.</div>
+    <div class="card" id="flowout"></div>
+  </section>
 
-<div class="card scrollx">
-  <h2>🇺🇸 US leaderboard — cumulative mentions, all time</h2>
-  <table class="wl" id="tbl-lead-us"></table>
-  <p class="note" id="note-lead-us"></p>
-</div>
+  <section class="page" id="p-paper">
+    <h2>페이퍼트레이딩</h2>
+    <div class="sub">4트랙 실험 — 동일 전략의 KR/US × 기본/센티 변형. 시가 체결 · 슬리피지 미반영.</div>
+    <div class="chips" id="tchips"></div>
+    <div class="stats" id="tstats"></div>
+    <div class="card" style="position:relative">
+      <svg id="eqchart" viewBox="0 0 680 240"></svg>
+      <div class="tt" id="tt"></div>
+    </div>
+    <h2>보유 종목</h2>
+    <div class="card scrollx" id="positions"></div>
+    <h2>매매 저널</h2>
+    <div class="card scrollx" id="journal"></div>
+  </section>
 
-<div class="card scrollx">
-  <h2>🇰🇷 Korea watchlist — ranked by discussion activity (24h)</h2>
-  <table class="wl" id="tbl-kr"></table>
-  <p class="note">Every row already passed today's technical &amp; fundamental screen. Score = posts on the stock's
-  Naver Finance discussion board (24h) + mentions in global financial media headlines (shown as "+N media" when
-  present). A <span class="star">★</span> = entry signal fired. A <span class="hot">●</span> = screen pass
-  <i>and</i> live mentions today. Korea's list is typically
-  short in bear markets.</p>
-</div>
+  <section class="page" id="p-pulse">
+    <h2>티커 펄스</h2>
+    <div class="sub" id="pulse-sub"></div>
+    <div class="seg" id="pulseseg">
+      <button data-m="us" class="on">🇺🇸 US</button>
+      <button data-m="kr">🇰🇷 KR</button>
+    </div>
+    <div id="pulsebody"></div>
+  </section>
 
-<div class="card scrollx">
-  <h2>🇰🇷 Korea leaderboard — cumulative mentions, all time</h2>
-  <table class="wl" id="tbl-lead-kr"></table>
-  <p class="note" id="note-lead-kr"></p>
-</div>
+  <footer>
+    개인 연구용 페이퍼트레이딩 실험의 기록입니다. 투자 권유·자문이 아니며, 모든 수치는 지연·집계
+    데이터입니다.<br>
+    KR: KRX 전종목 거래대금 × 테마 분류 집계 / US: 섹터 랭킹 · yfinance 종가. 원천 데이터 원문은
+    게시하지 않습니다.
+  </footer>
+</main>
 
-<div class="card">
-  <h2>Tickers passing the screen per day</h2>
-  <div class="legend">
-    <span><span class="dot" style="background:var(--series-1)"></span>US</span>
-    <span><span class="dot" style="background:var(--series-2)"></span>Korea</span>
-  </div>
-  <svg id="chart" width="100%" height="180" role="img" aria-label="Line chart of watchlist size per day, US and Korea"></svg>
-  <p class="note">Breadth gauge: how many stocks satisfied the momentum screen each day in each market. Hover for values.</p>
-</div>
-
-<footer>
-  <h3>Methodology</h3>
-  <p>Each trading day, every US-listed and KRX-listed common stock is tested against the same fixed,
-  rule-based momentum screen — a proprietary combination of technical trend criteria and fundamental
-  growth filters based on the latest regulatory filings (SEC for the US, DART for Korea); the exact
-  rules are not published. Stocks that pass are then ranked by social discussion activity —
-  for the US, bullish-tagged messages on <a href="https://stocktwits.com">StockTwits</a> in the last
-  24 hours; for Korea, post counts on each stock's <a href="https://finance.naver.com">Naver Finance</a>
-  discussion board plus mentions of the company's English name in global financial media RSS headlines.
-  Only aggregate daily counts are collected and shown; no post text or user data is stored.</p>
-  <h3>Disclaimer</h3>
-  <p>This page is a free, personal research project. Nothing here is investment advice or a recommendation
-  to buy or sell any security. Data may contain errors or gaps. Do your own research.</p>
-</footer>
-</div>
-
-<div id="tt"></div>
 <script src="data.js"></script>
-<script>
-(function () {
-  var D = window.DASH_DATA;
-  if (!D) { document.getElementById('upd').textContent = 'No data.'; return; }
-  var K = D.kr;
-  document.getElementById('upd').textContent = 'Last updated: ' + D.updated +
-    (K && K.updated !== D.updated ? ' (US) / ' + K.updated + ' (KR)' : '') +
-    ' · tracking since ' + D.first_day;
-
-  var tiles = [
-    [D.today.length, 'US stocks on today’s list'],
-    [K ? K.today.length : 0, 'Korean stocks on today’s list'],
-    [Math.max(D.n_days, K ? K.n_days : 0), 'days of history']
-  ];
-  document.getElementById('tiles').innerHTML = tiles.map(function (t) {
-    return '<div class="tile"><div class="v">' + t[0] + '</div><div class="k">' + t[1] + '</div></div>';
-  }).join('');
-
-  function spark(h) {
-    if (!h || h.length < 2) return '';
-    var w = 72, ht = 20, mx = Math.max.apply(null, h.concat([1]));
-    var pts = h.map(function (v, i) {
-      return (i * (w - 2) / (h.length - 1) + 1).toFixed(1) + ',' +
-             (ht - 2 - v / mx * (ht - 4)).toFixed(1);
-    }).join(' ');
-    return '<svg class="spark" width="' + w + '" height="' + ht + '">' +
-      '<polyline points="' + pts + '" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linecap="round"/></svg>';
-  }
-
-  function fmtPx(v, cur) {
-    if (v === null || v === undefined) return '';
-    return cur === 'krw' ? '₩' + Math.round(v).toLocaleString() : '$' + v.toFixed(2);
-  }
-
-  function renderTable(el, rows, msgLabel, cur) {
-    if (!rows.length) {
-      el.outerHTML = '<p class="note">No stocks passed the screen today.</p>';
-      return;
-    }
-    var maxS = Math.max.apply(null, rows.map(function (r) { return r.s; }).concat([1]));
-    var head = '<thead><tr><th>#</th><th>Ticker</th><th class="hide-m"></th>' +
-      '<th class="num">' + msgLabel + '</th><th></th>' +
-      '<th class="num hide-m">Close</th><th class="num">1d</th>' +
-      '<th class="num hide-m">Days listed</th><th class="hide-m">14d activity</th></tr></thead>';
-    var body = rows.map(function (r, i) {
-      var w = Math.max(2, Math.round(r.s / maxS * 120));
-      var chg = (r.chg === null || r.chg === undefined) ? '' :
-        '<span class="' + (r.chg >= 0 ? 'chg-up' : 'chg-dn') + '">' +
-        (r.chg >= 0 ? '+' : '') + r.chg.toFixed(1) + '%</span>';
-      var sTxt = r.s + (r.m ? ' <span style="color:var(--muted);font-size:11px">+' + r.m + ' media</span>' : '');
-      var hot = r.s > 0 ? ' <span class="hot" title="Passed the screen AND has discussion mentions today">●</span>' : '';
-      var star = r.star ? ' <span class="star" title="Entry signal fired — the strategy queued a buy at the next open">★</span>' : '';
-      return '<tr><td class="num">' + (i + 1) + '</td>' +
-        '<td class="tk">' + r.t + star + hot + '</td><td class="nm hide-m">' + r.n + '</td>' +
-        '<td class="num">' + sTxt + '</td>' +
-        '<td><span class="meter" style="width:' + w + 'px"></span></td>' +
-        '<td class="num hide-m">' + fmtPx(r.close, cur) + '</td>' +
-        '<td class="num">' + chg + '</td>' +
-        '<td class="num hide-m">' + r.streak + '</td>' +
-        '<td class="hide-m">' + spark(r.hist) + '</td></tr>';
-    }).join('');
-    el.innerHTML = head + '<tbody>' + body + '</tbody>';
-  }
-  renderTable(document.getElementById('tbl-us'), D.today, 'Bullish msgs', 'usd');
-  renderTable(document.getElementById('tbl-kr'), K ? K.today : [], 'Board posts', 'krw');
-
-  function renderLead(el, noteEl, lead) {
-    if (!lead || !lead.rows || !lead.rows.length) {
-      el.outerHTML = '<p class="note">No cumulative mentions yet — the leaderboard fills in as history accrues.</p>';
-      if (noteEl) noteEl.remove();
-      return;
-    }
-    var rows = lead.rows;
-    var maxC = Math.max.apply(null, rows.map(function (r) { return r.cum; }).concat([1]));
-    var head = '<thead><tr><th>#</th><th>Ticker</th><th class="hide-m"></th>' +
-      '<th class="num">Total mentions</th><th></th>' +
-      '<th class="num hide-m">Days listed</th><th class="num hide-m">First listed</th>' +
-      '<th class="num">Since listed</th></tr></thead>';
-    var body = rows.map(function (r, i) {
-      var w = Math.max(2, Math.round(r.cum / maxC * 120));
-      var ret = (r.ret === null || r.ret === undefined) ? '' :
-        '<span class="' + (r.ret >= 0 ? 'chg-up' : 'chg-dn') + '">' +
-        (r.ret >= 0 ? '+' : '') + r.ret.toFixed(1) + '%</span>';
-      var cTxt = r.cum + (r.m ? ' <span style="color:var(--muted);font-size:11px">+' + r.m + ' media</span>' : '');
-      return '<tr><td class="num">' + (i + 1) + '</td>' +
-        '<td class="tk">' + r.t + '</td><td class="nm hide-m">' + r.n + '</td>' +
-        '<td class="num">' + cTxt + '</td>' +
-        '<td><span class="meter" style="width:' + w + 'px"></span></td>' +
-        '<td class="num hide-m">' + r.days + '</td>' +
-        '<td class="num hide-m">' + r.first + '</td>' +
-        '<td class="num">' + ret + '</td></tr>';
-    }).join('');
-    el.innerHTML = head + '<tbody>' + body + '</tbody>';
-    if (noteEl) {
-      var base = '';
-      if (lead.avg_talk !== null && lead.avg_zero !== null) {
-        base = ' Baseline — avg return since first listing: stocks <b>with</b> mentions ' +
-          (lead.avg_talk >= 0 ? '+' : '') + lead.avg_talk + '% (' + lead.n_talk + ' stocks) vs ' +
-          '<b>never mentioned</b> ' + (lead.avg_zero >= 0 ? '+' : '') + lead.avg_zero + '% (' + lead.n_zero + ' stocks).';
-      }
-      noteEl.innerHTML = 'Mentions accumulated across every day since tracking began; the list no longer resets daily. ' +
-        '"Since listed" = price change from the day the stock first passed the screen to the latest close.' + base;
-    }
-  }
-  renderLead(document.getElementById('tbl-lead-us'), document.getElementById('note-lead-us'), D.lead);
-  renderLead(document.getElementById('tbl-lead-kr'), document.getElementById('note-lead-kr'), K ? K.lead : null);
-
-  // ── breadth chart: US + KR series on a shared date axis ──
-  var svg = document.getElementById('chart'), tt = document.getElementById('tt');
-  var mapUS = {}, mapKR = {};
-  D.days.forEach(function (d) { mapUS[d.d] = d.n; });
-  (K ? K.days : []).forEach(function (d) { mapKR[d.d] = d.n; });
-  var dates = Object.keys(mapUS).concat(Object.keys(mapKR));
-  dates = dates.filter(function (v, i) { return dates.indexOf(v) === i; }).sort();
-
-  function draw() {
-    var W = svg.clientWidth || 800, H = 180, L = 34, R = 10, T = 10, B = 24;
-    var vals = dates.map(function (d) { return mapUS[d] || 0; })
-      .concat(dates.map(function (d) { return mapKR[d] || 0; }));
-    var mx = Math.max.apply(null, vals.concat([1]));
-    var x = function (i) { return L + i * (W - L - R) / Math.max(dates.length - 1, 1); };
-    var y = function (v) { return T + (H - T - B) * (1 - v / mx); };
-    var parts = [];
-    [0, 0.5, 1].forEach(function (f) {
-      var v = Math.round(mx * f), yy = y(v);
-      parts.push('<line x1="' + L + '" x2="' + (W - R) + '" y1="' + yy + '" y2="' + yy +
-        '" stroke="var(--grid)" stroke-width="1"/>' +
-        '<text x="' + (L - 6) + '" y="' + (yy + 4) + '" text-anchor="end" font-size="11" fill="var(--muted)">' + v + '</text>');
-    });
-    parts.push('<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(0) + '" y2="' + y(0) +
-      '" stroke="var(--baseline)" stroke-width="1"/>');
-    var step = Math.max(1, Math.ceil(dates.length / 7));
-    dates.forEach(function (d, i) {
-      if (i % step === 0 || i === dates.length - 1) {
-        parts.push('<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle" font-size="11" fill="var(--muted)">' +
-          d.slice(5) + '</text>');
-      }
-    });
-    [[mapUS, 'var(--series-1)'], [mapKR, 'var(--series-2)']].forEach(function (sc) {
-      var seg = [];
-      var flush = function () {
-        if (seg.length > 1) {
-          parts.push('<polyline points="' + seg.join(' ') +
-            '" fill="none" stroke="' + sc[1] + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>');
-        } else if (seg.length === 1) {
-          var p = seg[0].split(',');
-          parts.push('<circle cx="' + p[0] + '" cy="' + p[1] + '" r="3" fill="' + sc[1] + '"/>');
-        }
-        seg = [];
-      };
-      dates.forEach(function (d, i) {
-        if (sc[0][d] === undefined) { flush(); return; }
-        seg.push(x(i).toFixed(1) + ',' + y(sc[0][d]).toFixed(1));
-      });
-      flush();
-    });
-    parts.push('<line id="xh" y1="' + T + '" y2="' + y(0) + '" stroke="var(--baseline)" stroke-width="1" visibility="hidden"/>');
-    svg.innerHTML = parts.join('');
-    svg.onmousemove = function (e) {
-      var rect = svg.getBoundingClientRect();
-      var i = Math.round((e.clientX - rect.left - L) / ((W - L - R) / Math.max(dates.length - 1, 1)));
-      i = Math.max(0, Math.min(dates.length - 1, i));
-      var d = dates[i], xh = document.getElementById('xh');
-      xh.setAttribute('x1', x(i)); xh.setAttribute('x2', x(i)); xh.setAttribute('visibility', 'visible');
-      tt.style.display = 'block';
-      tt.innerHTML = d + ' · US <b>' + (mapUS[d] !== undefined ? mapUS[d] : '–') +
-        '</b> · KR <b>' + (mapKR[d] !== undefined ? mapKR[d] : '–') + '</b>';
-      tt.style.left = Math.min(e.clientX + 12, window.innerWidth - 190) + 'px';
-      tt.style.top = (e.clientY - 34) + 'px';
-    };
-    svg.onmouseleave = function () {
-      tt.style.display = 'none';
-      document.getElementById('xh').setAttribute('visibility', 'hidden');
-    };
-  }
-  draw();
-  window.addEventListener('resize', draw);
-})();
-</script>
+<script src="app.js"></script>
 </body>
 </html>
