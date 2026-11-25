@@ -351,20 +351,39 @@
     renderPulse(b.dataset.m);
   }));
 
-  /* ── NEWS ── */
+  /* ── NEWS (큐레이션) ── */
+  function newsRow(it) {
+    return `<a class="nrow" href="${esc(it.u)}" target="_blank" rel="noopener">
+      <div class="nmeta">${it.mkt ? `<span class="chip ${esc(it.mkt)}">${esc(it.mkt.toUpperCase())}</span> ` : ""}${esc(it.ts)} · <b>${esc(it.src)}</b></div>
+      <div class="nt">${esc(it.t)}</div>
+      ${it.d ? `<div class="nd">${esc(it.d)}</div>` : ""}</a>`;
+  }
   function renderNews() {
-    const N = D.news;
-    for (const g of ["us", "tech", "kr"]) {
-      const el = $("news-" + g);
-      if (!el) continue;
-      const items = (N && N[g]) || [];
-      el.innerHTML = items.length ? items.map((it) =>
-        `<a class="nrow" href="${esc(it.u)}" target="_blank" rel="noopener">
-          <div class="nmeta">${esc(it.ts)} · <b>${esc(it.src)}</b></div>
-          <div class="nt">${esc(it.t)}</div>
-          ${it.d ? `<div class="nd">${esc(it.d)}</div>` : ""}</a>`).join("")
-        : "<span class='mini'>수집된 뉴스 없음</span>";
-    }
+    const N = D.news || {};
+    $("news-movers").innerHTML = (N.movers || []).length
+      ? N.movers.map(newsRow).join("") : "<span class='mini'>선별된 뉴스 없음</span>";
+    $("news-tech").innerHTML = (N.tech || []).length
+      ? N.tech.map(newsRow).join("") : "<span class='mini'>선별된 뉴스 없음</span>";
+    const th = N.theme || [];
+    $("news-theme").innerHTML = th.length ? th.map((x) => {
+      const nw = x.news || {};
+      const heat = x.heat == null ? "" : `<span class="heat">${x.heat.toFixed(1)}×</span>`;
+      const themes = (x.themes || []).map(esc).join(" · ");
+      const body = nw.t
+        ? (nw.u ? `<a class="nrow" style="padding:6px 0 0" href="${esc(nw.u)}" target="_blank" rel="noopener">
+             <div class="nmeta">${esc(nw.ts)} ${nw.src ? "· <b>" + esc(nw.src) + "</b>" : ""}</div>
+             <div class="nt">${esc(nw.t)}</div></a>`
+               : `<div class="nt" style="padding-top:6px">${esc(nw.t)}</div>`)
+        : `<div class="mini" style="padding-top:6px">연결된 당일 기사 없음 — 수급 오귀속 또는 무재료 쏠림 가능성</div>`;
+      return `<div class="panel">
+        <div class="fname"><span class="chip ${esc(x.mkt)}">${esc(x.mkt.toUpperCase())}</span>
+          ${themes} ${heat}
+          <span class="mono ${pctCls((x.chg || 0) / 100)}">${pct((x.chg || 0) / 100)}</span></div>
+        <div class="mini" style="margin-top:3px">주도주 <b style="color:var(--ink)">${esc(x.stock)}</b>
+          <span class="mono ${pctCls((x.schg || 0) / 100)}">${pct((x.schg || 0) / 100)}</span>
+          ${x.share ? `· 테마 내 ${x.share}%` : ""}${(x.themes || []).length >= 3 ? ` · <span style="color:var(--warn)">⚠ 테마 ${x.themes.length}곳 자석</span>` : ""}</div>
+        ${body}</div>`;
+    }).join("") : "<div class='panel mini'>해설 가능한 테마 없음</div>";
   }
 
   /* 보유·후보 종목 상세 토글 */
