@@ -30,6 +30,17 @@ body::after { content: ""; position: fixed; inset: -50%; pointer-events: none; z
 .wrap { max-width: 960px; margin: 0 auto; padding: 0 14px 90px; }
 .num, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
+/* ── 부팅 시퀀스 ──────────────────────── */
+#boot { position: fixed; inset: 0; z-index: 1000; background: #05070a;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: opacity .35s ease; }
+#boot.off { opacity: 0; pointer-events: none; }
+#boot pre { font-family: var(--mono); font-size: 13px; line-height: 1.9;
+  color: var(--amb); margin: 0; min-width: 300px; }
+#boot pre .ok { color: var(--up); }
+#boot pre .dim { color: var(--mut); }
+@media (prefers-reduced-motion: reduce) { #boot { display: none; } }
+
 /* ── 헤더 + 시세 테이프 ───────────────── */
 header { position: sticky; top: 0; z-index: 30; background: #05070a;
   border-bottom: 1px solid var(--line); }

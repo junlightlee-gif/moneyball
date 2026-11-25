@@ -1,5 +1,27 @@
-/* MONEYBALL dashboard — data.js(window.DASH_DATA) 렌더러 */
+/* MØNEYBALL dashboard — data.js(window.DASH_DATA) 렌더러 */
 (function () {
+  /* ── 부팅 시퀀스 (클릭/키로 스킵) ── */
+  (function boot() {
+    const el = document.getElementById("boot"), log = document.getElementById("bootlog");
+    if (!el || !log) return;
+    const kill = () => { el.classList.add("off"); setTimeout(() => el.remove(), 400); };
+    try { if (sessionStorage.getItem("mb_boot")) { el.remove(); return; } sessionStorage.setItem("mb_boot", "1"); } catch (e) {}
+    const L = [
+      "MØNEYBALL <span class='dim'>v2.1 — terminal</span>",
+      "> auth ......... <span class='dim'>ANONYMOUS</span>",
+      "> feeds ........ <span class='dim'>KRX · NAVER · WSJ · MW</span>",
+      "> models ....... <span class='dim'>MOMENTUM / SENTI / 4-TRACK</span>",
+      "> baseline ..... <span class='dim'>ARMED</span>",
+      "<span class='ok'>ACCESS GRANTED █</span>",
+    ];
+    let i = 0;
+    el.addEventListener("click", kill);
+    document.addEventListener("keydown", kill, { once: true });
+    const t = setInterval(() => {
+      if (i >= L.length) { clearInterval(t); setTimeout(kill, 420); return; }
+      log.innerHTML += L[i++] + "\n";
+    }, 150);
+  })();
   const D = window.DASH_DATA || {};
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g,
