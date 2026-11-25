@@ -421,7 +421,7 @@
   /* ── 라우팅 ── */
   function setPage() {
     const p = (location.hash || "#home").slice(1);
-    const valid = ["home", "flow", "news", "paper", "pulse"].includes(p) ? p : "home";
+    const valid = ["home", "flow", "news", "paper", "pulse", "deals"].includes(p) ? p : "home";
     document.querySelectorAll("nav a").forEach((a) => a.classList.toggle("on", a.dataset.p === valid));
     document.querySelectorAll("main .page").forEach((s) => s.classList.toggle("on", s.id === "p-" + valid));
     const tape = $("tape");
