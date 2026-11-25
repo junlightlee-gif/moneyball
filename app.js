@@ -424,6 +424,8 @@
     const valid = ["home", "flow", "news", "paper", "pulse"].includes(p) ? p : "home";
     document.querySelectorAll("nav a").forEach((a) => a.classList.toggle("on", a.dataset.p === valid));
     document.querySelectorAll("main .page").forEach((s) => s.classList.toggle("on", s.id === "p-" + valid));
+    const tape = $("tape");
+    if (tape) tape.style.display = valid === "paper" ? "" : "none";
     if (valid === "paper") renderPaper();
     window.scrollTo(0, 0);
   }
