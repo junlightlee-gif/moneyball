@@ -686,6 +686,145 @@
       <polyline points="${pt(skMinMax(vec))}" fill="none" stroke="${col}" stroke-width="1.8"/></svg>`;
   }
 
+  /* ── DEALS: 풀판 Worker API 연동 (티저 + 구독 + 검색) ── */
+  const DAPI = "https://athentic-lodestar.junlight-lee.workers.dev";
+  const DTAG = { review: ["예비심사", ""], uw: ["주관계약", "t2"], fund: ["펀드만기", "t3"] };
+  const DL = { token: null, email: null, page: 1, pages: 1, init: false };
+  try {
+    const s = JSON.parse(localStorage.getItem("mb_dsub") || "null");
+    if (s && s.exp > Date.now()) { DL.token = s.token; DL.email = s.email; }
+  } catch (e) {}
+
+  async function dApi(path, opts) {
+    const o = opts || {};
+    const h = { "Content-Type": "application/json" };
+    if (o.auth && DL.token) h["Authorization"] = "Bearer " + DL.token;
+    try {
+      const res = await fetch(DAPI + path, {
+        method: o.body ? "POST" : "GET", headers: h,
+        body: o.body ? JSON.stringify(o.body) : undefined,
+      });
+      const data = await res.json().catch(() => ({}));
+      return { ok: res.ok, status: res.status, data };
+    } catch (e) { return { ok: false, status: 0, data: {} }; }
+  }
+
+  function dRow(r) {
+    const [label, cls] = DTAG[r.type] || [r.type, ""];
+    return `<div class="drow"><span class="dtag ${cls}">${esc(label)}</span>
+      <span class="dnm">${esc(r.name || "")}</span>
+      <span class="dmeta">${esc(r.date || "")}${r.extra ? " · " + esc(r.extra) : ""}</span></div>`;
+  }
+
+  function dealsInit() {
+    if (DL.init) return;
+    DL.init = true;
+    // 블러 더미 (실데이터 아님 — 소스 노출 방지)
+    const dummy = [["review", "██████████", "2026-11-··"], ["uw", "████████", "2026-11-··"],
+      ["fund", "██████████████", "만기 D-··"], ["review", "████████████", "2026-10-··"],
+      ["uw", "██████", "2026-10-··"], ["fund", "████████", "만기 D-··"]];
+    $("dlock").innerHTML = dummy.map(([t, n, d]) => dRow({ type: t, name: n, date: d })).join("")
+      + `<div class="lockov">▮ LOCKED // SUBSCRIBERS ONLY<span class="mini">전체 리스트 · 검색 · Exit 신호는 구독 계정으로 열립니다</span></div>`;
+    // 구독 신청 (waitlist)
+    $("wl-btn").onclick = async () => {
+      const em = $("wl-email").value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { $("wl-msg").textContent = "이메일 형식을 확인해주세요"; return; }
+      $("wl-btn").disabled = true;
+      const r = await dApi("/api/public/waitlist", { body: { email: em } });
+      $("wl-btn").disabled = false;
+      $("wl-msg").textContent = r.ok ? "신청 완료 — 검토 후 이메일로 안내드립니다"
+        : r.status === 429 ? "요청이 너무 잦습니다 — 잠시 후 다시 시도해주세요"
+        : "접수 실패 — 잠시 후 다시 시도해주세요";
+      if (r.ok) $("wl-email").value = "";
+    };
+    $("d-login").onclick = (e) => { e.preventDefault(); renderAuth(true); };
+    renderAuth(false);
+    loadTeaser();
+  }
+
+  async function loadTeaser() {
+    const r = await dApi("/api/public/teaser");
+    if (r.ok && Array.isArray(r.data.rows) && r.data.rows.length) {
+      $("dl-rows").innerHTML = r.data.rows.map(dRow).join("");
+      $("dl-asof").textContent = r.data.asof ? "as of " + r.data.asof : "";
+    } else {
+      $("dl-rows").innerHTML = "<div class='mini' style='padding:10px'>라이브 샘플 준비 중 — 백엔드 연결 대기</div>";
+    }
+  }
+
+  function renderAuth(showLogin) {
+    const box = $("dsearch");
+    if (DL.token) { renderSearch(); return; }
+    box.innerHTML = showLogin ? `<div class="dlog">
+      <div class="dlt">// SUBSCRIBER LOGIN</div>
+      <div class="row"><input id="dg-em" type="email" placeholder="등록 이메일" autocomplete="email">
+      <button id="dg-req">인증코드 받기</button></div>
+      <div class="row" id="dg-step2" style="display:none;margin-top:8px">
+      <input id="dg-code" inputmode="numeric" placeholder="인증코드 6자리">
+      <button id="dg-ok">확인</button></div>
+      <div class="mini" id="dg-msg"></div></div>` : "";
+    if (!showLogin) return;
+    $("dg-req").onclick = async () => {
+      const em = $("dg-em").value.trim();
+      if (!em) return;
+      $("dg-req").disabled = true;
+      const r = await dApi("/api/auth/request", { body: { email: em } });
+      $("dg-req").disabled = false;
+      if (r.ok) { $("dg-step2").style.display = ""; $("dg-msg").textContent = "등록된 이메일이면 인증코드가 발송됩니다"; }
+      else $("dg-msg").textContent = r.status === 429 ? "요청이 너무 잦습니다" : "요청 실패 — 잠시 후 다시";
+    };
+    $("dg-ok").onclick = async () => {
+      const em = $("dg-em").value.trim(), code = $("dg-code").value.trim();
+      const r = await dApi("/api/auth/verify", { body: { email: em, code } });
+      if (r.ok && r.data.token) {
+        DL.token = r.data.token; DL.email = em;
+        try { localStorage.setItem("mb_dsub", JSON.stringify({ token: r.data.token, email: em, exp: r.data.exp || Date.now() + 864e5 })); } catch (e) {}
+        renderSearch();
+      } else $("dg-msg").textContent = "인증 실패 — 코드를 확인해주세요";
+    };
+  }
+
+  function dLogout() {
+    DL.token = null; DL.email = null;
+    try { localStorage.removeItem("mb_dsub"); } catch (e) {}
+    $("dsearch").innerHTML = "";
+  }
+
+  function renderSearch() {
+    $("dsearch").innerHTML = `<div class="dlog">
+      <div class="dwho"><span>// FULL ACCESS — ${esc(DL.email || "")}</span><a href="#deals" id="dg-out">로그아웃</a></div>
+      <div class="dsbar"><input id="ds-q" placeholder="회사명 · 키워드 검색">
+      <select id="ds-t"><option value="all">전체</option><option value="review">예비심사</option>
+      <option value="uw">주관계약</option><option value="fund">펀드만기</option></select>
+      <button id="ds-go">SEARCH ▸</button></div>
+      <div id="ds-res"></div>
+      <div class="dpg" id="ds-pg" style="display:none">
+      <button id="ds-prev">‹ 이전</button><span id="ds-info"></span><button id="ds-next">다음 ›</button></div></div>`;
+    $("dg-out").onclick = (e) => { e.preventDefault(); dLogout(); };
+    const go = (p) => dSearch(p);
+    $("ds-go").onclick = () => go(1);
+    $("ds-q").addEventListener("keydown", (e) => { if (e.key === "Enter") go(1); });
+    $("ds-prev").onclick = () => { if (DL.page > 1) go(DL.page - 1); };
+    $("ds-next").onclick = () => { if (DL.page < DL.pages) go(DL.page + 1); };
+  }
+
+  async function dSearch(page) {
+    const q = $("ds-q").value.trim(), t = $("ds-t").value;
+    $("ds-res").innerHTML = "<div class='mini' style='padding:8px'>검색 중…</div>";
+    const r = await dApi(`/api/sub/search?q=${encodeURIComponent(q)}&type=${t}&page=${page}`, { auth: true });
+    if (r.status === 401) { dLogout(); renderAuth(true); $("dg-msg").textContent = "세션이 만료됐습니다 — 다시 로그인해주세요"; return; }
+    if (r.status === 429) { $("ds-res").innerHTML = "<div class='mini' style='padding:8px'>요청이 너무 잦습니다 — 잠시 후 다시</div>"; return; }
+    if (!r.ok) { $("ds-res").innerHTML = "<div class='mini' style='padding:8px'>검색 실패 — 잠시 후 다시 시도해주세요</div>"; return; }
+    const rows = r.data.rows || [];
+    DL.page = r.data.page || page; DL.pages = r.data.pages || 1;
+    $("ds-res").innerHTML = rows.length
+      ? `<div class="panel" style="padding:0">${rows.map(dRow).join("")}</div>`
+      : "<div class='mini' style='padding:8px'>결과 없음</div>";
+    const pg = $("ds-pg");
+    pg.style.display = DL.pages > 1 ? "" : "none";
+    $("ds-info").textContent = `${DL.page} / ${DL.pages} · 총 ${comma(r.data.total || rows.length)}건`;
+  }
+
   /* ── 라우팅 ── */
   function setPage() {
     const p = (location.hash || "#home").slice(1);
@@ -696,6 +835,7 @@
     if (tape) tape.style.display = valid === "paper" ? "" : "none";
     if (valid === "paper") renderPaper();
     if (valid === "sketch") { skInit(); skLoad(() => {}); }
+    if (valid === "deals") dealsInit();
     window.scrollTo(0, 0);
   }
   window.addEventListener("hashchange", setPage);
