@@ -236,6 +236,32 @@ tr.xdet > td { background: var(--panel2); text-align: left; white-space: normal;
 .crow .cdet { display: none; padding: 8px 10px 10px; background: var(--panel2); }
 .crow.open .cdet { display: block; }
 
+/* ── SKETCH 패턴 검색 ─────────────────── */
+#skcv { width: 100%; height: auto; display: block; background: var(--panel2);
+  border: 1px solid var(--line); border-radius: 3px; touch-action: none;
+  cursor: crosshair; }
+.skbar { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+.skbar button { border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink2); padding: 7px 16px; border-radius: 2px; font-family: var(--mono);
+  font-size: 12.5px; font-weight: 700; cursor: pointer; letter-spacing: .06em; }
+.skbar button.skgo { background: var(--amb); border-color: var(--amb); color: #0a0a05; }
+.skrow { display: grid; grid-template-columns: 30px 1fr auto auto; gap: 2px 12px;
+  align-items: center; padding: 8px 12px; border: 1px solid var(--line);
+  border-radius: 3px; background: var(--panel); margin-bottom: 5px;
+  text-decoration: none; color: inherit; }
+.skrow:hover { border-color: var(--amb-dim); }
+.skrow .rank { font-family: var(--mono); font-size: 11px; color: var(--mut); }
+.skrow .nm { font-weight: 600; font-size: 13.5px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; }
+.skrow .nm .tk { font-family: var(--mono); color: var(--mut); font-size: 11px;
+  font-weight: 400; }
+.skrow .sim { font-family: var(--mono); font-weight: 700; color: var(--amb);
+  font-size: 13px; }
+.skrow .meta { grid-column: 2; font-family: var(--mono); font-size: 11px;
+  color: var(--ink2); }
+.skrow .ov { grid-column: 3 / 5; grid-row: 1 / span 2; }
+.skrow .ov svg { width: 130px; height: 40px; display: block; }
+
 /* ── DEALS 게이트 ────────────────────── */
 .gate { border: 1px dashed var(--amb-dim); text-align: center; padding: 34px 18px;
   margin-top: 14px; }

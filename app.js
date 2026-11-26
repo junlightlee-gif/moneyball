@@ -418,15 +418,177 @@
     if (r && !r.classList.contains("nodet")) r.classList.toggle("open");
   });
 
+  /* ── SKETCH: 손그림 패턴 검색 ── */
+  const SK = { pts: [], zcache: {}, loading: false };
+  const N32 = 32;
+
+  function skSel(id) {
+    const b = document.querySelector("#" + id + " button.on");
+    return b ? b.dataset.v : null;
+  }
+
+  function skInit() {
+    const cv = $("skcv");
+    if (!cv || cv._init) return;
+    cv._init = true;
+    const ctx = cv.getContext("2d");
+    const css = getComputedStyle(document.documentElement);
+    const draw = () => {
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.strokeStyle = "rgba(138,148,166,.13)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= cv.width; x += 64) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, cv.height); ctx.stroke(); }
+      for (let y = 0; y <= cv.height; y += 48) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cv.width, y); ctx.stroke(); }
+      if (SK.pts.length > 1) {
+        ctx.strokeStyle = css.getPropertyValue("--amb").trim() || "#ffa028";
+        ctx.lineWidth = 2.5; ctx.lineJoin = "round"; ctx.lineCap = "round";
+        ctx.beginPath();
+        SK.pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+        ctx.stroke();
+      }
+    };
+    let down = false;
+    const pos = (e) => {
+      const r = cv.getBoundingClientRect();
+      return [(e.clientX - r.left) * cv.width / r.width, (e.clientY - r.top) * cv.height / r.height];
+    };
+    cv.addEventListener("pointerdown", (e) => {
+      down = true; try { cv.setPointerCapture(e.pointerId); } catch (x) {}
+      SK.pts = [pos(e)]; draw(); e.preventDefault();
+    });
+    cv.addEventListener("pointermove", (e) => {
+      if (!down) return;
+      const p = pos(e);
+      if (!SK.pts.length || p[0] > SK.pts[SK.pts.length - 1][0]) { SK.pts.push(p); draw(); }
+    });
+    cv.addEventListener("pointerup", () => { down = false; });
+    draw();
+    $("sk-clear").onclick = () => { SK.pts = []; draw(); $("sk-res").innerHTML = ""; };
+    $("sk-run").onclick = skRun;
+    ["sk-tf", "sk-mkt"].forEach((id) =>
+      document.querySelectorAll("#" + id + " button").forEach((b) => b.onclick = () => {
+        document.querySelectorAll("#" + id + " button").forEach((x) => x.classList.toggle("on", x === b));
+        if (SK.pts.length > 4) skRun();
+      }));
+  }
+
+  function skLoad(cb) {
+    if (window.SKETCH_DATA) { cb(); return; }
+    if (SK.loading) return;
+    SK.loading = true;
+    $("sk-hint").textContent = "종목 데이터 로딩 중… (~0.8MB, 최초 1회)";
+    const sc = document.createElement("script");
+    sc.src = "sketch.js?v=" + (D.generated || "").replace(/\D/g, "");
+    sc.onload = () => { $("sk-hint").textContent = "준비 완료 — SCAN을 누르세요"; cb(); };
+    sc.onerror = () => { $("sk-hint").textContent = "데이터 로드 실패 — 새로고침 해보세요"; SK.loading = false; };
+    document.body.appendChild(sc);
+  }
+
+  function skTarget() {
+    const cv = $("skcv");
+    if (SK.pts.length < 5) return null;
+    const x0 = SK.pts[0][0], x1 = SK.pts[SK.pts.length - 1][0];
+    if (x1 - x0 < 40) return null;
+    const ys = new Array(N32).fill(null);
+    for (const [x, y] of SK.pts) {
+      const i = Math.min(N32 - 1, Math.max(0, Math.round((x - x0) / (x1 - x0) * (N32 - 1))));
+      ys[i] = ys[i] == null ? y : (ys[i] + y) / 2;
+    }
+    for (let i = 0; i < N32; i++) if (ys[i] == null) {  // 빈 칸은 선형 보간
+      let a = i - 1; while (a >= 0 && ys[a] == null) a--;
+      let b = i + 1; while (b < N32 && ys[b] == null) b++;
+      ys[i] = a < 0 ? ys[b] : b >= N32 ? ys[a] : ys[a] + (ys[b] - ys[a]) * (i - a) / (b - a);
+    }
+    const v = ys.map((y) => cv.height - y);  // 캔버스 y축 반전
+    return skZ(v);
+  }
+
+  function skZ(v) {
+    const mean = v.reduce((a, b) => a + b, 0) / v.length;
+    let sd = Math.sqrt(v.reduce((a, b) => a + (b - mean) ** 2, 0) / v.length);
+    if (sd < 1e-9) return null;
+    return v.map((x) => (x - mean) / sd);
+  }
+
+  function skBank(mkt, tf) {
+    const key = mkt + tf;
+    if (SK.zcache[key]) return SK.zcache[key];
+    const S = window.SKETCH_DATA[mkt];
+    const bank = [];
+    for (let i = 0; i < S.t.length; i++) {
+      const s = S[tf][i];
+      if (!s) { bank.push(null); continue; }
+      const v = new Array(N32);
+      for (let j = 0; j < N32; j++) v[j] = +s.slice(j * 2, j * 2 + 2);
+      bank.push(skZ(v));
+    }
+    SK.zcache[key] = bank;
+    return bank;
+  }
+
+  function skRun() {
+    if (SK.pts.length < 5) { $("sk-hint").textContent = "먼저 모양을 그려주세요"; return; }
+    if (!window.SKETCH_DATA) { skLoad(skRun); return; }
+    const tgt = skTarget();
+    if (!tgt) { $("sk-hint").textContent = "선이 너무 짧습니다 — 더 길게 그려주세요"; return; }
+    const tf = skSel("sk-tf"), mk = skSel("sk-mkt");
+    const mkts = mk === "all" ? ["kr", "us"] : [mk];
+    const hits = [];
+    for (const m of mkts) {
+      const S = window.SKETCH_DATA[m], bank = skBank(m, tf);
+      for (let i = 0; i < bank.length; i++) {
+        const z = bank[i];
+        if (!z) continue;
+        let r = 0;
+        for (let j = 0; j < N32; j++) r += tgt[j] * z[j];
+        hits.push([r / N32, m, i]);
+      }
+    }
+    hits.sort((a, b) => b[0] - a[0]);
+    const tfName = { d: "일봉", w: "주봉", m: "월봉" }[tf];
+    $("sk-hint").textContent = `${comma(hits.length)}종목 스캔 완료 (${tfName})`;
+    $("sk-res").innerHTML = hits.slice(0, 30).map(([r, m, i], rank) => {
+      const S = window.SKETCH_DATA[m];
+      const s = S[tf][i], vec = [];
+      for (let j = 0; j < N32; j++) vec.push(+s.slice(j * 2, j * 2 + 2));
+      const tgtMinMax = skMinMax(tgt);
+      const url = m === "kr"
+        ? `https://m.stock.naver.com/domestic/stock/${S.t[i]}/total`
+        : `https://finance.yahoo.com/quote/${S.t[i]}`;
+      return `<a class="skrow" href="${url}" target="_blank" rel="noopener">
+        <span class="rank">${String(rank + 1).padStart(2, "0")}</span>
+        <span class="nm"><span class="chip ${m}">${m.toUpperCase()}</span> ${esc(S.n[i])} <span class="tk">${esc(S.t[i])}</span></span>
+        <span class="sim">${(r * 100).toFixed(1)}%</span>
+        <span class="meta num">${fmtPx(m, S.px[i])} <span class="${pctCls(S.chg[i] / 100)}">${pct(S.chg[i] / 100)}</span></span>
+        <span class="ov">${skOverlay(tgtMinMax, vec, S.chg[i])}</span></a>`;
+    }).join("") || "<div class='panel mini'>결과 없음</div>";
+  }
+
+  function skMinMax(z) {
+    const mn = Math.min(...z), mx = Math.max(...z), sp = mx - mn || 1;
+    return z.map((v) => (v - mn) / sp * 99);
+  }
+
+  function skOverlay(tgt, vec, chg) {
+    const W = 130, H = 40;
+    const pt = (arr) => arr.map((v, i) =>
+      `${(i / (N32 - 1) * (W - 4) + 2).toFixed(1)},${(H - 3 - v / 99 * (H - 6)).toFixed(1)}`).join(" ");
+    const col = chg >= 0 ? "var(--up)" : "var(--dn)";
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <polyline points="${pt(tgt)}" fill="none" stroke="var(--amb)" stroke-width="1.5" stroke-dasharray="3 3" opacity=".8"/>
+      <polyline points="${pt(skMinMax(vec))}" fill="none" stroke="${col}" stroke-width="1.8"/></svg>`;
+  }
+
   /* ── 라우팅 ── */
   function setPage() {
     const p = (location.hash || "#home").slice(1);
-    const valid = ["home", "flow", "news", "paper", "pulse", "deals"].includes(p) ? p : "home";
+    const valid = ["home", "flow", "news", "paper", "pulse", "sketch", "deals"].includes(p) ? p : "home";
     document.querySelectorAll("nav a").forEach((a) => a.classList.toggle("on", a.dataset.p === valid));
     document.querySelectorAll("main .page").forEach((s) => s.classList.toggle("on", s.id === "p-" + valid));
     const tape = $("tape");
     if (tape) tape.style.display = valid === "paper" ? "" : "none";
     if (valid === "paper") renderPaper();
+    if (valid === "sketch") { skInit(); skLoad(() => {}); }
     window.scrollTo(0, 0);
   }
   window.addEventListener("hashchange", setPage);

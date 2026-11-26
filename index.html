@@ -30,6 +30,7 @@
     <a href="#news" data-p="news">NEWS</a>
     <a href="#paper" data-p="paper">PORTFOLIO</a>
     <a href="#pulse" data-p="pulse">SIGNALS</a>
+    <a href="#sketch" data-p="sketch">SKETCH</a>
     <a href="#deals" data-p="deals">DEALS</a>
   </nav>
 </header>
@@ -103,6 +104,30 @@
     <div id="pulsebody"></div>
   </section>
 
+  <section class="page" id="p-sketch">
+    <h2>Pattern Sketch</h2>
+    <div class="sub">원하는 차트 모양을 그리면, 지금 그 모양을 만들고 있는 종목을 찾습니다. 유사도 = 형태 상관계수 (가격 수준 무관, 모양만).</div>
+    <div class="seg" id="sk-tf">
+      <button data-v="d" class="on">일봉 60D</button>
+      <button data-v="w">주봉 60W</button>
+      <button data-v="m">월봉 48M</button>
+    </div>
+    <div class="seg" id="sk-mkt" style="margin-left:6px">
+      <button data-v="all" class="on">전체</button>
+      <button data-v="kr">KR</button>
+      <button data-v="us">US</button>
+    </div>
+    <div class="panel" style="padding:10px">
+      <canvas id="skcv" width="640" height="240"></canvas>
+      <div class="skbar">
+        <button id="sk-run" class="skgo">SCAN ▸</button>
+        <button id="sk-clear">지우기</button>
+        <span class="mini" id="sk-hint">왼쪽 → 오른쪽으로 드래그해 그리세요</span>
+      </div>
+    </div>
+    <div id="sk-res"></div>
+  </section>
+
   <section class="page" id="p-deals">
     <h2>Deal Screener</h2>
     <div class="sub">DART 공시 → 정규화 → 조건 스크리닝. IPO 파이프라인 · 주관계약 · 예비심사 · 펀드만기 Exit 신호.</div>
@@ -131,6 +156,6 @@
 </main>
 
 <script src="data.js"></script>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>
