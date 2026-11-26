@@ -423,7 +423,7 @@
   const N32 = 32;
   const TF_MAX = { d: 250, w: 130, m: 72 };
   const TF_DEF = { d: 60, w: 60, m: 48 };
-  const SK_MIN = 0.75; // 결합 유사도 컷
+  const SK_MIN = 0.70; // 결합 유사도 컷
 
   function skSel(id) {
     const b = document.querySelector("#" + id + " button.on");
@@ -614,7 +614,7 @@
     for (let i = 0; i < S.t.length; i++) {
       const s = S[tf][i];
       if (!s || s.length < nb) { bank.push(null); continue; }
-      const v32 = skR32(skSer(s.slice(-nb)));
+      const v32 = skSmooth(skR32(skSer(s.slice(-nb))));  // 스케치와 동일 스무딩 — 비대칭 제거
       bank.push([skZ(v32), skDz(v32)]);
     }
     SK.bcache[key] = bank;
@@ -641,8 +641,8 @@
         let r1 = 0, r2 = 0;
         for (let j = 0; j < N32; j++) r1 += tz[j] * e[0][j];
         for (let j = 0; j < N32 - 1; j++) r2 += tdz[j] * e[1][j];
-        // 결합 유사도: 형태 상관 60% + 기울기(꺾임 타이밍) 상관 40%
-        hits.push([0.6 * r1 / N32 + 0.4 * r2 / (N32 - 1), m, i]);
+        // 결합 유사도: 형태 상관 75% + 기울기(꺾임 타이밍) 상관 25%
+        hits.push([0.75 * r1 / N32 + 0.25 * r2 / (N32 - 1), m, i]);
       }
     }
     hits.sort((a, b) => b[0] - a[0]);
