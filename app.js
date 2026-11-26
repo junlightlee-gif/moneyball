@@ -419,8 +419,11 @@
   });
 
   /* ── SKETCH: 손그림 패턴 검색 ── */
-  const SK = { pts: [], zcache: {}, loading: false };
+  const SK = { pts: [], bcache: {}, loading: false };
   const N32 = 32;
+  const TF_MAX = { d: 250, w: 130, m: 72 };
+  const TF_DEF = { d: 60, w: 60, m: 48 };
+  const SK_MIN = 0.75; // 결합 유사도 컷
 
   function skSel(id) {
     const b = document.querySelector("#" + id + " button.on");
@@ -468,18 +471,84 @@
     ["sk-tf", "sk-mkt"].forEach((id) =>
       document.querySelectorAll("#" + id + " button").forEach((b) => b.onclick = () => {
         document.querySelectorAll("#" + id + " button").forEach((x) => x.classList.toggle("on", x === b));
+        if (id === "sk-tf") {
+          const tf = b.dataset.v;
+          $("sk-n").value = TF_DEF[tf];
+          $("sk-n").max = TF_MAX[tf];
+        }
         if (SK.pts.length > 4) skRun();
       }));
+    $("sk-n").addEventListener("change", () => { if (SK.pts.length > 4) skRun(); });
+    $("sk-res").addEventListener("click", (e) => {
+      if (e.target.closest("a")) return; // 외부 링크는 통과
+      const tb = e.target.closest(".skimgtabs button");
+      if (tb) {  // KR 차트 기간 전환
+        const box = tb.closest(".skifr");
+        box.querySelectorAll(".skimgtabs button").forEach((x) => x.classList.toggle("on", x === tb));
+        box.querySelector(".skimg").src =
+          `https://ssl.pstatic.net/imgfinance/chart/item/${tb.dataset.c}/${box.dataset.tk}.png?t=${Date.now()}`;
+        return;
+      }
+      const row = e.target.closest(".skrow");
+      if (!row) return;
+      const det = row.nextElementSibling;
+      const wasOpen = det && det.classList.contains("on");
+      document.querySelectorAll("#sk-res .skdet.on").forEach((d) => d.classList.remove("on"));
+      document.querySelectorAll("#sk-res .skrow.open").forEach((d) => d.classList.remove("open"));
+      if (!det || wasOpen) return;
+      row.classList.add("open");
+      det.classList.add("on");
+      const box = det.querySelector(".skifr");
+      if (box && !box.firstChild) {
+        if (row.dataset.kr) {  // KR: 네이버 차트 이미지 (KRX는 TradingView 위젯 미제공)
+          const tk = row.dataset.kr;
+          const init = { D: "candle/day", W: "candle/week", M: "candle/month" }[row.dataset.iv] || "candle/day";
+          box.dataset.tk = tk;
+          box.innerHTML = `<div class="skimgtabs">
+            ${[["area/day", "당일"], ["candle/day", "일봉"], ["candle/week", "주봉"], ["candle/month", "월봉"]]
+              .map(([c, l]) => `<button data-c="${c}" class="${c === init ? "on" : ""}">${l}</button>`).join("")}
+          </div>
+          <img class="skimg" alt="차트" src="https://ssl.pstatic.net/imgfinance/chart/item/${init}/${tk}.png?t=${Date.now()}">`;
+        } else {  // US: TradingView 임베드 (15분 지연)
+          const f = document.createElement("iframe");
+          f.src = "https://s.tradingview.com/widgetembed/?symbol=" + encodeURIComponent(row.dataset.sym)
+            + "&interval=" + row.dataset.iv
+            + "&theme=dark&style=1&locale=kr&hide_side_toolbar=1&allow_symbol_change=0&save_image=0&withdateranges=1";
+          f.loading = "lazy";
+          box.appendChild(f);
+        }
+      } else if (box && box.dataset.tk) {  // KR 재오픈: 최신 이미지로 갱신
+        const on = box.querySelector(".skimgtabs button.on");
+        if (on) box.querySelector(".skimg").src =
+          `https://ssl.pstatic.net/imgfinance/chart/item/${on.dataset.c}/${box.dataset.tk}.png?t=${Date.now()}`;
+      }
+      det.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }
+
+  function skBars(tf) {
+    const inp = $("sk-n");
+    let n = Math.round(+inp.value) || TF_DEF[tf];
+    n = Math.max(16, Math.min(TF_MAX[tf], n));
+    if (String(n) !== inp.value) inp.value = n;
+    return n;
   }
 
   function skLoad(cb) {
     if (window.SKETCH_DATA) { cb(); return; }
     if (SK.loading) return;
     SK.loading = true;
-    $("sk-hint").textContent = "종목 데이터 로딩 중… (~0.8MB, 최초 1회)";
+    $("sk-hint").textContent = "종목 데이터 로딩 중… (~1.7MB, 최초 1회)";
     const sc = document.createElement("script");
-    sc.src = "sketch.js?v=" + (D.generated || "").replace(/\D/g, "");
-    sc.onload = () => { $("sk-hint").textContent = "준비 완료 — SCAN을 누르세요"; cb(); };
+    sc.src = "sketch.js?f2v=" + (D.generated || "").replace(/\D/g, "");
+    sc.onload = () => {
+      if (!window.SKETCH_DATA || window.SKETCH_DATA.v !== 2) { // 구버전 데이터 가드
+        window.SKETCH_DATA = null; SK.loading = false;
+        $("sk-hint").textContent = "서버 데이터 갱신 대기 중 — 잠시 후 새로고침 해주세요";
+        return;
+      }
+      $("sk-hint").textContent = "준비 완료 — SCAN을 누르세요"; cb();
+    };
     sc.onerror = () => { $("sk-hint").textContent = "데이터 로드 실패 — 새로고침 해보세요"; SK.loading = false; };
     document.body.appendChild(sc);
   }
@@ -500,7 +569,7 @@
       ys[i] = a < 0 ? ys[b] : b >= N32 ? ys[a] : ys[a] + (ys[b] - ys[a]) * (i - a) / (b - a);
     }
     const v = ys.map((y) => cv.height - y);  // 캔버스 y축 반전
-    return skZ(v);
+    return skSmooth(v);  // 손떨림 완화 (이동평균 3)
   }
 
   function skZ(v) {
@@ -510,58 +579,96 @@
     return v.map((x) => (x - mean) / sd);
   }
 
-  function skBank(mkt, tf) {
-    const key = mkt + tf;
-    if (SK.zcache[key]) return SK.zcache[key];
+  function skSmooth(v) {
+    const o = v.slice();
+    for (let i = 1; i < v.length - 1; i++) o[i] = (v[i - 1] + v[i] + v[i + 1]) / 3;
+    return o;
+  }
+
+  function skDz(v) {  // 1차 차분(기울기)의 z-score — 꺾이는 타이밍 비교용
+    const d = new Array(v.length - 1);
+    for (let i = 1; i < v.length; i++) d[i - 1] = v[i] - v[i - 1];
+    return skZ(d);
+  }
+
+  function skSer(s) {  // base36 문자열 → 숫자 배열
+    const v = new Array(s.length);
+    for (let i = 0; i < s.length; i++) v[i] = parseInt(s[i], 36);
+    return v;
+  }
+
+  function skR32(v) {  // 임의 길이 → 32포인트 선형 재샘플
+    const n = v.length, out = new Array(N32);
+    for (let j = 0; j < N32; j++) {
+      const x = j * (n - 1) / (N32 - 1), a = Math.floor(x), f = x - a;
+      out[j] = f ? v[a] * (1 - f) + v[a + 1] * f : v[a];
+    }
+    return out;
+  }
+
+  function skBank(mkt, tf, nb) {
+    const key = mkt + tf + nb;
+    if (SK.bcache[key]) return SK.bcache[key];
     const S = window.SKETCH_DATA[mkt];
     const bank = [];
     for (let i = 0; i < S.t.length; i++) {
       const s = S[tf][i];
-      if (!s) { bank.push(null); continue; }
-      const v = new Array(N32);
-      for (let j = 0; j < N32; j++) v[j] = +s.slice(j * 2, j * 2 + 2);
-      bank.push(skZ(v));
+      if (!s || s.length < nb) { bank.push(null); continue; }
+      const v32 = skR32(skSer(s.slice(-nb)));
+      bank.push([skZ(v32), skDz(v32)]);
     }
-    SK.zcache[key] = bank;
+    SK.bcache[key] = bank;
     return bank;
   }
 
   function skRun() {
     if (SK.pts.length < 5) { $("sk-hint").textContent = "먼저 모양을 그려주세요"; return; }
     if (!window.SKETCH_DATA) { skLoad(skRun); return; }
-    const tgt = skTarget();
-    if (!tgt) { $("sk-hint").textContent = "선이 너무 짧습니다 — 더 길게 그려주세요"; return; }
-    const tf = skSel("sk-tf"), mk = skSel("sk-mkt");
+    const t32 = skTarget();
+    if (!t32) { $("sk-hint").textContent = "선이 너무 짧습니다 — 더 길게 그려주세요"; return; }
+    const tz = skZ(t32), tdz = skDz(t32);
+    if (!tz || !tdz) { $("sk-hint").textContent = "선이 너무 평평합니다 — 모양을 그려주세요"; return; }
+    const tf = skSel("sk-tf"), mk = skSel("sk-mkt"), nb = skBars(tf);
     const mkts = mk === "all" ? ["kr", "us"] : [mk];
     const hits = [];
+    let scanned = 0;
     for (const m of mkts) {
-      const S = window.SKETCH_DATA[m], bank = skBank(m, tf);
+      const bank = skBank(m, tf, nb);
       for (let i = 0; i < bank.length; i++) {
-        const z = bank[i];
-        if (!z) continue;
-        let r = 0;
-        for (let j = 0; j < N32; j++) r += tgt[j] * z[j];
-        hits.push([r / N32, m, i]);
+        const e = bank[i];
+        if (!e || !e[0] || !e[1]) continue;
+        scanned++;
+        let r1 = 0, r2 = 0;
+        for (let j = 0; j < N32; j++) r1 += tz[j] * e[0][j];
+        for (let j = 0; j < N32 - 1; j++) r2 += tdz[j] * e[1][j];
+        // 결합 유사도: 형태 상관 60% + 기울기(꺾임 타이밍) 상관 40%
+        hits.push([0.6 * r1 / N32 + 0.4 * r2 / (N32 - 1), m, i]);
       }
     }
     hits.sort((a, b) => b[0] - a[0]);
+    const pass = hits.filter((h) => h[0] >= SK_MIN);
     const tfName = { d: "일봉", w: "주봉", m: "월봉" }[tf];
-    $("sk-hint").textContent = `${comma(hits.length)}종목 스캔 완료 (${tfName})`;
-    $("sk-res").innerHTML = hits.slice(0, 30).map(([r, m, i], rank) => {
+    const show = pass.length ? pass.slice(0, 30) : hits.slice(0, 5);
+    $("sk-hint").textContent = pass.length
+      ? `${comma(scanned)}종목 중 ${pass.length}종목 일치 (${tfName} ${nb}봉 · 유사도 ≥ ${SK_MIN * 100}%)`
+      : `${comma(scanned)}종목 중 유사도 ${SK_MIN * 100}% 이상 없음 — 가장 가까운 5종목만 표시 (${tfName} ${nb}봉)`;
+    const tgtMinMax = skMinMax(t32);
+    const iv = { d: "D", w: "W", m: "M" }[tf];
+    $("sk-res").innerHTML = show.map(([r, m, i], rank) => {
       const S = window.SKETCH_DATA[m];
-      const s = S[tf][i], vec = [];
-      for (let j = 0; j < N32; j++) vec.push(+s.slice(j * 2, j * 2 + 2));
-      const tgtMinMax = skMinMax(tgt);
+      const ser = skSer(S[tf][i].slice(-nb));
       const url = m === "kr"
         ? `https://m.stock.naver.com/domestic/stock/${S.t[i]}/total`
         : `https://finance.yahoo.com/quote/${S.t[i]}`;
-      return `<a class="skrow" href="${url}" target="_blank" rel="noopener">
+      const sym = m === "kr" ? "" : S.t[i].replace(/-/g, ".");
+      return `<div class="skrow" data-sym="${esc(sym)}" data-kr="${m === "kr" ? esc(S.t[i]) : ""}" data-iv="${iv}">
         <span class="rank">${String(rank + 1).padStart(2, "0")}</span>
         <span class="nm"><span class="chip ${m}">${m.toUpperCase()}</span> ${esc(S.n[i])} <span class="tk">${esc(S.t[i])}</span></span>
         <span class="sim">${(r * 100).toFixed(1)}%</span>
         <span class="meta num">${fmtPx(m, S.px[i])} <span class="${pctCls(S.chg[i] / 100)}">${pct(S.chg[i] / 100)}</span></span>
-        <span class="ov">${skOverlay(tgtMinMax, vec, S.chg[i])}</span></a>`;
-    }).join("") || "<div class='panel mini'>결과 없음</div>";
+        <span class="ov">${skOverlay(tgtMinMax, ser, S.chg[i])}</span></div>
+      <div class="skdet"><div class="sklink"><a href="${url}" target="_blank" rel="noopener">${m === "kr" ? "네이버 증권" : "Yahoo Finance"} ↗</a></div><div class="skifr"></div></div>`;
+    }).join("") || "<div class='panel mini'>결과 없음 — 봉 수를 줄이거나 다른 시장을 선택해 보세요</div>";
   }
 
   function skMinMax(z) {
@@ -572,7 +679,7 @@
   function skOverlay(tgt, vec, chg) {
     const W = 130, H = 40;
     const pt = (arr) => arr.map((v, i) =>
-      `${(i / (N32 - 1) * (W - 4) + 2).toFixed(1)},${(H - 3 - v / 99 * (H - 6)).toFixed(1)}`).join(" ");
+      `${(i / (arr.length - 1) * (W - 4) + 2).toFixed(1)},${(H - 3 - v / 99 * (H - 6)).toFixed(1)}`).join(" ");
     const col = chg >= 0 ? "var(--up)" : "var(--dn)";
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
       <polyline points="${pt(tgt)}" fill="none" stroke="var(--amb)" stroke-width="1.5" stroke-dasharray="3 3" opacity=".8"/>

@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=7">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 <div id="boot" aria-hidden="true"><pre id="bootlog"></pre></div>
@@ -106,7 +106,7 @@
 
   <section class="page" id="p-sketch">
     <h2>Pattern Sketch</h2>
-    <div class="sub">원하는 차트 모양을 그리면, 지금 그 모양을 만들고 있는 종목을 찾습니다. 유사도 = 형태 상관계수 (가격 수준 무관, 모양만).</div>
+    <div class="sub">원하는 차트 모양을 그리면, 지금 그 모양을 만들고 있는 종목을 찾습니다. 유사도 = 형태 + 기울기 상관 결합 (가격 수준 무관, 모양만). 봉 수는 직접 입력 가능 — 일봉 최대 250 · 주봉 130 · 월봉 72. 결과를 누르면 실시간 차트가 펼쳐집니다.</div>
     <div class="seg" id="sk-tf">
       <button data-v="d" class="on">일봉 60D</button>
       <button data-v="w">주봉 60W</button>
@@ -122,6 +122,7 @@
       <div class="skbar">
         <button id="sk-run" class="skgo">SCAN ▸</button>
         <button id="sk-clear">지우기</button>
+        <label class="sknum">봉 수 <input id="sk-n" type="number" value="60" min="16" max="250" step="1" inputmode="numeric"></label>
         <span class="mini" id="sk-hint">왼쪽 → 오른쪽으로 드래그해 그리세요</span>
       </div>
     </div>
@@ -156,6 +157,6 @@
 </main>
 
 <script src="data.js"></script>
-<script src="app.js?v=10"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

@@ -245,11 +245,33 @@ tr.xdet > td { background: var(--panel2); text-align: left; white-space: normal;
   color: var(--ink2); padding: 7px 16px; border-radius: 2px; font-family: var(--mono);
   font-size: 12.5px; font-weight: 700; cursor: pointer; letter-spacing: .06em; }
 .skbar button.skgo { background: var(--amb); border-color: var(--amb); color: #0a0a05; }
+.sknum { display: flex; align-items: center; gap: 6px; font-family: var(--mono);
+  font-size: 11.5px; color: var(--mut); }
+.sknum input { width: 62px; background: var(--panel2); border: 1px solid var(--line);
+  color: var(--ink); font-family: var(--mono); font-size: 12.5px; padding: 6px 8px;
+  border-radius: 2px; text-align: right; -moz-appearance: textfield; }
+.sknum input:focus { outline: none; border-color: var(--amb-dim); }
 .skrow { display: grid; grid-template-columns: 30px 1fr auto auto; gap: 2px 12px;
   align-items: center; padding: 8px 12px; border: 1px solid var(--line);
   border-radius: 3px; background: var(--panel); margin-bottom: 5px;
-  text-decoration: none; color: inherit; }
+  text-decoration: none; color: inherit; cursor: pointer; }
 .skrow:hover { border-color: var(--amb-dim); }
+.skrow.open { border-color: var(--amb-dim); border-radius: 3px 3px 0 0; margin-bottom: 0; }
+.skdet { display: none; border: 1px solid var(--amb-dim); border-top: none;
+  border-radius: 0 0 3px 3px; background: var(--panel2); margin-bottom: 5px; }
+.skdet.on { display: block; }
+.skdet .sklink { display: flex; justify-content: flex-end; padding: 7px 10px;
+  font-family: var(--mono); font-size: 11px; }
+.skdet .sklink a { color: var(--amb); text-decoration: none; }
+.skdet iframe { width: 100%; height: 380px; border: 0; display: block; }
+.skdet .skifr { padding: 0; }
+.skimgtabs { display: flex; gap: 6px; padding: 0 10px 8px; }
+.skimgtabs button { border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink2); padding: 4px 10px; border-radius: 2px; font-family: var(--mono);
+  font-size: 11px; cursor: pointer; }
+.skimgtabs button.on { border-color: var(--amb); color: var(--amb); }
+.skimg { display: block; width: calc(100% - 20px); margin: 0 10px 10px;
+  background: #fff; border-radius: 2px; }
 .skrow .rank { font-family: var(--mono); font-size: 11px; color: var(--mut); }
 .skrow .nm { font-weight: 600; font-size: 13.5px; overflow: hidden;
   text-overflow: ellipsis; white-space: nowrap; }
