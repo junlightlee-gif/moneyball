@@ -686,8 +686,8 @@
       <polyline points="${pt(skMinMax(vec))}" fill="none" stroke="${col}" stroke-width="1.8"/></svg>`;
   }
 
-  /* ── DEALS: 풀판 Worker API 연동 (티저 + 구독 + 검색) ── */
-  const DAPI = "https://athentic-lodestar.junlight-lee.workers.dev";
+  /* ── DEALS: backroom-api Worker 연동 (티저 + 구독 + 검색) — 풀판 주소는 비공개 유지 ── */
+  const DAPI = "https://backroom-api.junlight-lee.workers.dev";
   const DTAG = { review: ["예비심사", ""], uw: ["주관계약", "t2"], fund: ["펀드만기", "t3"] };
   const DL = { token: null, email: null, page: 1, pages: 1, init: false };
   try {
