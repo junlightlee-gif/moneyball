@@ -423,5 +423,14 @@ tr.xdet > td { background: var(--panel2); text-align: left; white-space: normal;
 
 footer { margin-top: 34px; font-size: 11px; color: var(--mut); line-height: 1.7;
   border-top: 1px solid var(--line); padding-top: 12px; }
+footer .fsrc { margin-top: 9px; }
+footer .fsrc summary { display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+  font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .1em;
+  color: var(--mut); list-style: none; user-select: none; }
+footer .fsrc summary::-webkit-details-marker { display: none; }
+footer .fsrc summary::after { content: "▾"; font-size: 8px; }
+footer .fsrc[open] summary::after { content: "▴"; }
+footer .fsrc summary:hover { color: var(--amb); }
+footer .fsrc > div { margin-top: 6px; }
 footer .manifesto { font-family: var(--mono); font-size: 11.5px; color: var(--amb-dim);
   letter-spacing: .04em; }
