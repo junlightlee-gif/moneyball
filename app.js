@@ -58,30 +58,136 @@
   /* ── 헤더 + 테이프 ── */
   const krDay = D.flow && D.flow.kr ? D.flow.kr.day : (D.kr ? D.kr.updated : "");
   const usDay = D.flow && D.flow.us ? D.flow.us.day : D.updated;
-  $("upd").innerHTML = `KR ${esc(krDay)} · US ${esc(usDay)}<br>UPD ${esc(D.generated || "")}`;
+  const u2 = $("upd2");
+  if (u2) u2.textContent = `DATA KR ${krDay} · US ${usDay} · UPD ${D.generated || ""}`;
   const P = D.paper || [];
   $("tape").innerHTML = P.map((t) =>
     `<span>${esc(t.label)} <b>${fmtEq(t.mkt, t.equity)}</b> <b class="${pctCls(t.day)}">${pct(t.day)}</b></span>`
   ).join("");
 
-  /* ── TODAY: 트랙 패널 ── */
-  $("home-sub").textContent = P.length ? `페이퍼 4트랙 · KR ${krDay} / US ${usDay} 종가 기준` : "데이터 준비 중";
+  /* ── 헤더 우측: 장 상태 램프 (클라이언트 시계, 휴장일 미반영) ── */
+  function mktClock(tz, oh, om, ch, cm) {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz, hour12: false, weekday: "short",
+      hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(new Date());
+    const g = (t) => (parts.find((x) => x.type === t) || {}).value;
+    const wd = g("weekday");
+    const cur = (+g("hour") % 24) * 3600 + +g("minute") * 60 + +g("second");
+    const op = oh * 3600 + om * 60, cl = ch * 3600 + cm * 60;
+    const fmt = (s) => {
+      const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60;
+      return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(ss).padStart(2, "0")}`
+                   : `${m}:${String(ss).padStart(2, "0")}`;
+    };
+    const wkend = wd === "Sat" || wd === "Sun";
+    if (!wkend && cur >= op && cur < cl) return { open: true, txt: "CLOSE -" + fmt(cl - cur) };
+    let days = 0;
+    if (wd === "Fri" && cur >= cl) days = 3;
+    else if (wd === "Sat") days = 2;
+    else if (wd === "Sun" || cur >= cl) days = 1;
+    return { open: false, txt: "OPEN -" + fmt(days * 86400 + op - cur) };
+  }
+  function drawLamps() {
+    const el = $("lamps");
+    if (!el) return;
+    const kr = mktClock("Asia/Seoul", 9, 0, 15, 30);
+    const us = mktClock("America/New_York", 9, 30, 16, 0);
+    el.innerHTML = [["KRX", kr], ["NYSE", us]].map(([n, x]) =>
+      `<span class="lamp ${x.open ? "live" : ""}"><i>●</i>${n} <b>${x.open ? "OPEN" : "CLOSED"}</b> <span class="cnt">${x.txt}</span></span>`
+    ).join("");
+  }
+  drawLamps();
+  setInterval(drawLamps, 1000);
+
+  /* ── 헤더 우측: 회전 one-liner ── */
+  const sgnp = (v) => (v > 0 ? "+" : "") + v + "%";
+  const HL = [];
+  const kLead = D.kr && D.kr.lead, uLead = D.lead;
+  if (kLead && kLead.avg_talk != null && kLead.avg_zero != null)
+    HL.push(`KR 언급군 ${sgnp(kLead.avg_talk)} vs 무언급 ${sgnp(kLead.avg_zero)} — 합의 ${kLead.avg_talk >= kLead.avg_zero ? "우위" : "열위"}`);
+  if (uLead && uLead.avg_talk != null && uLead.avg_zero != null)
+    HL.push(`US 언급군 ${sgnp(uLead.avg_talk)} vs 무언급 ${sgnp(uLead.avg_zero)} — 합의 ${uLead.avg_talk >= uLead.avg_zero ? "우위" : "열위"}`);
+  if (D.flow && D.flow.kr && D.flow.kr.in && D.flow.kr.in[0]) {
+    const f0 = D.flow.kr.in[0];
+    HL.push(`쏠림 1위 ${f0.name}${f0.heat != null ? " " + f0.heat.toFixed(1) + "×" : ""}`);
+  }
+  HL.push("시장의 합의는 데이터보다 자주 틀린다");
+  HL.push("SIGNAL>NOISE");
+  (function rotHL() {
+    const el = $("hline");
+    if (!el || !HL.length) return;
+    let i = 0;
+    el.textContent = HL[0];
+    setInterval(() => {
+      el.classList.add("fade");
+      setTimeout(() => {
+        i = (i + 1) % HL.length;
+        el.textContent = HL[i];
+        el.classList.remove("fade");
+      }, 450);
+    }, 7000);
+  })();
+
+  /* ── TODAY: Consensus Check (소음 모니터) ── */
+  function nzCard(mkt, lead) {
+    if (!lead || lead.avg_talk == null) return "";
+    const hasZero = lead.avg_zero != null;
+    const gap = hasZero ? +(lead.avg_talk - lead.avg_zero).toFixed(1) : null;
+    const win = gap == null ? null : gap > 0;
+    return `<div class="panel nz">
+      <div class="thead"><span class="chip ${mkt}">${mkt.toUpperCase()}</span>
+        <span class="tname">언급군 vs 무언급군</span>
+        ${win == null ? "" : `<span class="chip ${win ? "ok" : "halt"}" style="margin-left:auto">합의 ${win ? "승" : "패"}</span>`}</div>
+      <div class="nzrow">
+        <div class="nzv"><b class="${pctCls(lead.avg_talk)}">${sgnp(lead.avg_talk)}</b><span>언급 ${lead.n_talk}종목</span></div>
+        <div class="nzvs">vs</div>
+        <div class="nzv"><b class="${hasZero ? pctCls(lead.avg_zero) : "flat"}">${hasZero ? sgnp(lead.avg_zero) : "—"}</b><span>무언급 ${lead.n_zero || 0}종목</span></div>
+        ${gap == null ? "" : `<div class="nzgap ${win ? "pos" : "neg"}">${(gap > 0 ? "+" : "") + gap}p</div>`}
+      </div>
+    </div>`;
+  }
+  function nzDiv(mkt, rows) {
+    if (!rows || !rows.length) return "";
+    const talk = rows[0];
+    const withChg = rows.filter((r) => r.chg != null);
+    if (!withChg.length) return "";
+    const earn = withChg.reduce((a, b) => (b.chg > a.chg ? b : a));
+    const body = !(talk.s > 0)
+      ? `오늘 언급 신호 없음 · 돈은 <b>${esc(earn.n)}</b>`
+      : talk.t === earn.t
+        ? `오늘은 말과 돈이 같은 곳 — <b>${esc(talk.n)}</b>`
+        : `말은 <b>${esc(talk.n)}</b>(언급 ${talk.s}) · 돈은 <b>${esc(earn.n)}</b>`;
+    return `<div class="jrow"><span class="chip ${mkt}">${mkt.toUpperCase()}</span>
+      <span class="nm">${body}</span>
+      <span class="mono ${pctCls(earn.chg / 100)}" style="font-weight:600">${pct(earn.chg / 100)}</span></div>`;
+  }
+  const nzEl = $("noise");
+  if (nzEl) {
+    nzEl.innerHTML = nzCard("kr", kLead) + nzCard("us", uLead);
+    if (!nzEl.innerHTML) nzEl.innerHTML = "<div class='panel mini'>집계 준비 중 — 리더보드 데이터 누적 대기</div>";
+    const dv = nzDiv("kr", D.kr && D.kr.today) + nzDiv("us", D.today);
+    $("nz-div").innerHTML = dv
+      ? `<div class="panel">${dv}<div class="mini" style="padding-top:6px">오늘 스크린 통과 종목 중 — 최다 언급 vs 최고 수익. 둘이 다르면 소음과 신호가 갈라진 날.</div></div>` : "";
+  }
+
+  /* ── TODAY: 트랙 한 줄 요약 ── */
+  $("home-sub").textContent = P.length ? `페이퍼 4트랙 · KR ${krDay} / US ${usDay} 종가 기준 — 행 클릭 시 상세` : "데이터 준비 중";
   $("tracks").innerHTML = P.map((t) => {
     const [stTxt, stCls] = STATUS[t.status];
     const vals = t.series.slice(-45).map((r) => r[1]);
-    return `<div class="panel tcard" data-t="${t.id}">
-      <div class="thead"><span class="chip ${t.mkt}">${t.mkt.toUpperCase()}</span>
-        <span class="tname">${esc(t.label)}</span>
-        <span class="chip ${stCls}" style="margin-left:auto">${stTxt}</span></div>
-      <div class="eq">${fmtEq(t.mkt, t.equity)}</div>
-      <div class="drow"><span class="${pctCls(t.day)}">1D ${pct(t.day)}</span>
-        <span class="${pctCls(t.cum)}">CUM ${pct(t.cum)}</span></div>
-      <span class="${pctCls(t.cum)}" style="display:block">${spark(vals, 300, 42)}</span>
-      <div class="meta"><span>POS ${t.n_pos}</span><span>CASH ${Math.round(t.cash / t.equity * 100)}%</span><span>${esc(t.date)}</span></div>
+    return `<div class="trow" data-t="${t.id}">
+      <span class="chip ${t.mkt}">${t.mkt.toUpperCase()}</span>
+      <span class="tname">${esc(t.label)}</span>
+      <span class="mono eqv">${fmtEq(t.mkt, t.equity)}</span>
+      <span class="mono ${pctCls(t.day)}">1D ${pct(t.day)}</span>
+      <span class="mono ${pctCls(t.cum)}">CUM ${pct(t.cum)}</span>
+      <span class="tspark ${pctCls(t.cum)}">${spark(vals, 90, 24, { fill: false })}</span>
+      <span class="chip ${stCls}">${stTxt}</span>
     </div>`;
   }).join("");
   $("tracks").addEventListener("click", (e) => {
-    const c = e.target.closest(".tcard");
+    const c = e.target.closest(".trow");
     if (c) { selTrack = c.dataset.t; location.hash = "#paper"; }
   });
 
@@ -251,7 +357,7 @@
       <tr><th>종목</th><th>진입일</th><th>보유일</th><th>진입가</th><th>현재가</th><th>수익률</th></tr>` +
       pos.map((p) => {
         const det = stockDetail(p, t.mkt);
-        return `<tr class="xrow"><td class="nm">${esc(p.n)} <span class="mini mono">${esc(p.t)}</span></td>
+        return `<tr class="xrow"><td class="nm">${esc(p.n)} <span class="mini mono">${esc(p.t)}</span>${det ? '<span class="rcaret">▾</span>' : ""}</td>
         <td>${mdDate(p.ed)}</td><td>${p.bars}</td>
         <td>${fmtPx(t.mkt, p.ep)}</td><td>${fmtPx(t.mkt, p.px)}</td>
         <td class="${pctCls(p.ret || 0)}" style="font-weight:600">${p.ret == null ? "—" : pct(p.ret)}</td></tr>
@@ -280,7 +386,7 @@
         ? stockDetail({ spark: r.spk, hi52: r.hi52, lo52: r.lo52, fin: r.fin, chg: r.chg }, t.mkt)
         : "";
       return `<div class="crow${det ? "" : " nodet"}"><div class="prow">${(r.star || pendSet.has(r.t)) ? '<span class="star">★</span>' : ""}
-        <span class="nm">${esc(r.n)} <span class="tk">${esc(r.t)}</span></span>
+        <span class="nm">${esc(r.n)} <span class="tk">${esc(r.t)}</span>${det ? '<span class="rcaret">▾</span>' : ""}</span>
         <span class="mono mini">${fmtPx(t.mkt, r.close)}</span>${chg}
         <span class="score">${r.s}</span>
         <span class="mini mono" style="width:38px;text-align:right">${r.streak}일째</span></div>
@@ -290,10 +396,14 @@
     const jr = t.journal.slice().reverse();
     $("journal").innerHTML = jr.length ? `<table class="g">
       <tr><th>종목</th><th>진입</th><th>청산</th><th>수익률</th><th>사유</th></tr>` +
-      jr.map((j) => `<tr><td class="nm">${esc(j.n)} <span class="mini mono">${esc(j.t)}</span></td>
+      jr.map((j) => {
+        const det = j.spk ? stockDetail({ spark: j.spk, hi52: j.hi52, lo52: j.lo52, fin: j.fin, ret: j.ret }, t.mkt) : "";
+        return `<tr${det ? ' class="xrow"' : ""}><td class="nm">${esc(j.n)} <span class="mini mono">${esc(j.t)}</span>${det ? '<span class="rcaret">▾</span>' : ""}</td>
         <td>${mdDate(j.ed)}</td><td>${mdDate(j.xd)}</td>
         <td class="${pctCls(j.ret)}" style="font-weight:600">${pct(j.ret)}</td>
-        <td><span class="why ${esc(j.why)}">${esc(j.why)}</span></td></tr>`).join("") + "</table>"
+        <td><span class="why ${esc(j.why)}">${esc(j.why)}</span></td></tr>
+        ${det ? `<tr class="xdet"><td colspan="5">${det}</td></tr>` : ""}`;
+      }).join("") + "</table>"
       : "<span class='mini'>아직 체결 없음</span>";
   }
 
@@ -336,14 +446,21 @@
   }
 
   /* ── SIGNALS ── */
+  function pulseDet(r, mkt) {
+    return (r.spk || r.fin)
+      ? stockDetail({ spark: r.spk, hi52: r.hi52, lo52: r.lo52, fin: r.fin, chg: r.chg }, mkt)
+      : "";
+  }
   function pulseRows(rows, mkt) {
     return rows.slice(0, 25).map((r) => {
       const chg = r.chg == null ? "" : `<span class="mono ${pctCls(r.chg / 100)}">${pct(r.chg / 100)}</span>`;
-      return `<div class="prow">${r.star ? '<span class="star">★</span>' : ""}
-        <span class="nm">${esc(r.n)} <span class="tk">${esc(r.t)}</span></span>
+      const det = pulseDet(r, mkt);
+      return `<div class="crow${det ? "" : " nodet"}"><div class="prow">${r.star ? '<span class="star">★</span>' : ""}
+        <span class="nm">${esc(r.n)} <span class="tk">${esc(r.t)}</span>${det ? '<span class="rcaret">▾</span>' : ""}</span>
         <span class="flat" style="width:52px">${spark(r.hist, 52, 20, { fill: false })}</span>
         ${chg}<span class="score" title="언급 점수">${r.s}</span>
-        <span class="mini mono" style="width:38px;text-align:right">${r.streak}일째</span></div>`;
+        <span class="mini mono" style="width:38px;text-align:right">${r.streak}일째</span></div>
+        ${det ? `<div class="cdet">${det}</div>` : ""}</div>`;
     }).join("");
   }
   function pulseLead(lead, mkt) {
@@ -352,10 +469,14 @@
       ? `<div class="note">첫 등재 후 평균 수익률 — 언급 종목 ${lead.avg_talk > 0 ? "+" : ""}${lead.avg_talk}% (${lead.n_talk}개)` +
         (lead.avg_zero != null ? ` vs 무언급 ${lead.avg_zero > 0 ? "+" : ""}${lead.avg_zero}% (${lead.n_zero}개)` : "") + `</div>` : "";
     return `<h2>Leaderboard</h2>${note}<div class="panel">` +
-      lead.rows.slice(0, 15).map((r) =>
-        `<div class="prow"><span class="nm">${esc(r.n)} <span class="tk">${esc(r.t)}</span></span>
+      lead.rows.slice(0, 15).map((r) => {
+        const det = pulseDet(r, mkt);
+        return `<div class="crow${det ? "" : " nodet"}"><div class="prow">
+          <span class="nm">${esc(r.n)} <span class="tk">${esc(r.t)}</span>${det ? '<span class="rcaret">▾</span>' : ""}</span>
           <span class="mini mono">${r.days}일</span><span class="score">${r.cum}</span>
-          <span class="mono ${r.ret == null ? "flat" : pctCls(r.ret)}" style="width:62px;text-align:right">${r.ret == null ? "—" : (r.ret > 0 ? "+" : "") + r.ret + "%"}</span></div>`).join("") + "</div>";
+          <span class="mono ${r.ret == null ? "flat" : pctCls(r.ret)}" style="width:62px;text-align:right">${r.ret == null ? "—" : (r.ret > 0 ? "+" : "") + r.ret + "%"}</span></div>
+          ${det ? `<div class="cdet">${det}</div>` : ""}</div>`;
+      }).join("") + "</div>";
   }
   function renderPulse(mkt) {
     const body = $("pulsebody");
@@ -375,10 +496,14 @@
 
   /* ── NEWS (큐레이션) ── */
   function newsRow(it) {
-    return `<a class="nrow" href="${esc(it.u)}" target="_blank" rel="noopener">
+    const img = it.img
+      ? `<img class="nimg" loading="lazy" referrerpolicy="no-referrer" alt="" src="${esc(it.img)}" onerror="this.remove()">`
+      : "";
+    return `<a class="nrow${img ? " withimg" : ""}" href="${esc(it.u)}" target="_blank" rel="noopener">
+      <div class="nbody">
       <div class="nmeta">${it.mkt ? `<span class="chip ${esc(it.mkt)}">${esc(it.mkt.toUpperCase())}</span> ` : ""}${esc(it.ts)} · <b>${esc(it.src)}</b></div>
       <div class="nt">${esc(it.t)}</div>
-      ${it.d ? `<div class="nd">${esc(it.d)}</div>` : ""}</a>`;
+      ${it.d ? `<div class="nd">${esc(it.d)}</div>` : ""}</div>${img}</a>`;
   }
   function renderNews() {
     const N = D.news || {};
@@ -408,15 +533,15 @@
     }).join("") : "<div class='panel mini'>해설 가능한 테마 없음</div>";
   }
 
-  /* 보유·후보 종목 상세 토글 */
-  $("positions").addEventListener("click", (e) => {
+  /* 보유·후보·저널·시그널 종목 상세 토글 */
+  ["positions", "journal"].forEach((id) => $(id).addEventListener("click", (e) => {
     const r = e.target.closest("tr.xrow");
     if (r) r.classList.toggle("open");
-  });
-  $("cands").addEventListener("click", (e) => {
+  }));
+  ["cands", "pulsebody"].forEach((id) => $(id).addEventListener("click", (e) => {
     const r = e.target.closest(".crow");
     if (r && !r.classList.contains("nodet")) r.classList.toggle("open");
-  });
+  }));
 
   /* ── SKETCH: 손그림 패턴 검색 ── */
   const SK = { pts: [], bcache: {}, loading: false };

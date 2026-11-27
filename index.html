@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 <div id="boot" aria-hidden="true"><pre id="bootlog"></pre></div>
@@ -21,7 +21,10 @@
       <div class="logo" data-text="MØNEYBALL">M<span class="o">Ø</span>NEYBALL</div>
       <div class="tag">SIGNAL&gt;NOISE&nbsp;//&nbsp;기성 호가를 의심하라</div>
     </div>
-    <div class="upd" id="upd"></div>
+    <div class="hstat">
+      <div class="lamps" id="lamps"></div>
+      <div id="hline"></div>
+    </div>
   </div>
   <div class="tape" id="tape"></div>
   <nav id="nav">
@@ -37,9 +40,13 @@
 
 <main class="wrap">
   <section class="page on" id="p-home">
-    <h2>Market Monitor</h2>
+    <h2>Consensus Check</h2>
+    <div class="sub">합의(언급량)가 수익을 설명하는가 — 스크린 통과 종목의 첫 등재 후 평균 수익률, 언급군 vs 무언급군 매일 검증.</div>
+    <div class="grid2" id="noise"></div>
+    <div id="nz-div"></div>
+    <h2>Paper Tracks</h2>
     <div class="sub" id="home-sub"></div>
-    <div class="grid2" id="tracks"></div>
+    <div class="panel tlist" id="tracks"></div>
     <h2>Risk Baseline</h2>
     <div class="sub">롤링 21영업일 수익률 — 사전등록 개입 기준. 발동 시 과정 점검만, 파라미터 변경 금지.</div>
     <div class="panel scrollx"><table class="g" id="basetab"></table></div>
@@ -161,11 +168,12 @@
     MØNEYBALL — 합의된 가격을 의심하는 개인 연구 터미널. 투자 권유·자문이 아니며, 모든 수치는
     지연·집계 데이터입니다.<br>
     KR: KRX 전종목 거래대금 × 테마 분류 집계 · 네이버 종목 기본정보 / US: 섹터 랭킹 · yfinance
-    종가. 원천 데이터 원문은 게시하지 않습니다.
+    종가. 원천 데이터 원문은 게시하지 않습니다.<br>
+    <span class="mini mono" id="upd2"></span>
   </footer>
 </main>
 
 <script src="data.js"></script>
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>
