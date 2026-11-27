@@ -108,6 +108,11 @@
     HL.push(`KR 언급군 ${sgnp(kLead.avg_talk)} vs 무언급 ${sgnp(kLead.avg_zero)} — 합의 ${kLead.avg_talk >= kLead.avg_zero ? "우위" : "열위"}`);
   if (uLead && uLead.avg_talk != null && uLead.avg_zero != null)
     HL.push(`US 언급군 ${sgnp(uLead.avg_talk)} vs 무언급 ${sgnp(uLead.avg_zero)} — 합의 ${uLead.avg_talk >= uLead.avg_zero ? "우위" : "열위"}`);
+  const RG = D.regime || {};
+  ["kr", "us"].forEach((m) => {
+    const r = RG[m];
+    if (r && r.bull === false) HL.push(`REGIME ${r.idx} < 200일선 — 신규 진입 중단 (현금 모드)`);
+  });
   if (D.flow && D.flow.kr && D.flow.kr.in && D.flow.kr.in[0]) {
     const f0 = D.flow.kr.in[0];
     HL.push(`쏠림 1위 ${f0.name}${f0.heat != null ? " " + f0.heat.toFixed(1) + "×" : ""}`);
@@ -200,6 +205,22 @@
         <td class="mini">${pct(t.warn)}</td><td class="mini">${pct(t.halt)}</td>
         <td><span class="chip ${stCls}">${stTxt}</span></td></tr>`;
     }).join("");
+
+  /* ── TODAY: 지수 레짐 (약세장 현금 모드) ── */
+  const regEl = $("regbox");
+  if (regEl) {
+    const regs = ["kr", "us"].map((m) => RG[m]).filter(Boolean);
+    const chips = regs.map((r) =>
+      `<span class="chip ${r.bull ? "ok" : "halt"}">${r.idx} ${r.bull ? "▲ BULL" : "▼ BEAR"}</span>`).join(" ");
+    const bears = regs.filter((r) => r.bull === false);
+    if (bears.length) {
+      regEl.innerHTML = `<div class="callout">⚠ REGIME ${chips} —
+        ${bears.map((r) => `${r.idx} 200일선 아래 (기준 ${r.asof})`).join(" · ")}.
+        사전등록 규칙에 따라 해당 시장은 신규 진입·스캔을 멈추고 현금 모드로 대기합니다. 보유 종목 관리는 계속됩니다.</div>`;
+    } else if (regs.length) {
+      regEl.innerHTML = `<div class="note">REGIME ${chips} — 지수 200일선 위, 신규 진입 스캔 가동 중.</div>`;
+    }
+  }
 
   /* ── FLOWS ── */
   const F = D.flow;
@@ -375,10 +396,12 @@
         <span class="mini mono">${mdDate(o.d)}</span></div>`).join("") + `</div>` : "";
     const cand = t.mkt === "kr" ? (D.kr && D.kr.today || []) : (D.today || []);
     const cdate = t.mkt === "kr" ? (D.kr && D.kr.updated) : D.updated;
-    const stale = t.mkt === "us" ? " · 소셜 수집 일시중지로 언급 점수는 참고용" : "";
+    const rgT = RG[t.mkt];
+    const bearNote = rgT && rgT.bull === false
+      ? ` · 약세장 현금 모드(${rgT.idx} < 200일선) — 신규 후보 스캔 중단` : "";
     $("cand-sub").textContent = cand.length
-      ? `스크린 통과 종목 ${cand.length}개 (${cdate} 기준)${stale} — ★ = 매수 예약`
-      : "스크린 통과 종목 없음";
+      ? `스크린 통과 종목 ${cand.length}개 (${cdate} 기준)${bearNote} — ★ = 매수 예약`
+      : `스크린 통과 종목 없음${bearNote} (마지막 ${cdate || "—"})`;
     const pendSet = new Set(pend.filter((o) => o.type === "buy").map((o) => o.t));
     $("cands").innerHTML = cand.length ? cand.slice(0, 15).map((r) => {
       const chg = r.chg == null ? "" : `<span class="mono ${pctCls(r.chg / 100)}">${pct(r.chg / 100)}</span>`;
@@ -480,12 +503,16 @@
   }
   function renderPulse(mkt) {
     const body = $("pulsebody");
+    const bear = (m) => RG[m] && RG[m].bull === false;
     if (mkt === "us") {
-      $("pulse-sub").textContent = `미국 — 전략 통과 종목의 소셜 언급 집계 (마지막 수집 ${D.updated}, 수집 일시중지 중)`;
+      $("pulse-sub").textContent = `미국 — 전략 통과 종목의 소셜 언급 집계` + (bear("us")
+        ? ` · 약세장 현금 모드(S&P500 < 200일선) — 신규 스캔 대기, 마지막 후보 ${D.updated}`
+        : ` (마지막 수집 ${D.updated})`);
       body.innerHTML = `<div class="panel">${pulseRows(D.today || [], "us")}</div>` + pulseLead(D.lead, "us");
     } else {
       const K = D.kr || {};
-      $("pulse-sub").textContent = `한국 — 뉴스·커뮤니티 언급 집계 (${K.updated || "—"})`;
+      $("pulse-sub").textContent = `한국 — 뉴스·커뮤니티 언급 집계 (${K.updated || "—"})` + (bear("kr")
+        ? ` · 약세장 현금 모드(KOSPI < 200일선) — 신규 진입은 중단, 언급 집계는 계속` : "");
       body.innerHTML = `<div class="panel">${pulseRows(K.today || [], "kr")}</div>` + pulseLead(K.lead, "kr");
     }
   }
