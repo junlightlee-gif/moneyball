@@ -152,6 +152,24 @@
       </div>
     </div>`;
   }
+  function nzStockBlk(r, mkt) {
+    const src = mkt === "kr"
+      ? `네이버 종토 <b>${r.s}</b>${r.m ? ` · 미디어 <b>${r.m}</b>` : ""}`
+      : `소셜·미디어 합산 <b>${r.s}</b>`;
+    const hist = r.hist && r.hist.length > 1
+      ? `<span class="flat" style="width:52px">${spark(r.hist, 52, 18, { fill: false })}</span><span class="mini">언급 추이</span>` : "";
+    const det = (r.spk || r.fin)
+      ? stockDetail({ spark: r.spk, hi52: r.hi52, lo52: r.lo52, fin: r.fin, chg: r.chg }, mkt) : "";
+    return `<div class="nzstk">
+      <div class="nzname">${esc(r.n)} <span class="tk">${esc(r.t)}</span></div>
+      <div class="nzmeta">
+        <span>현재가 <b>${fmtPx(mkt, r.close)}</b></span>
+        <span>당일 <b class="${pctCls((r.chg || 0) / 100)}">${r.chg == null ? "—" : pct(r.chg / 100)}</b></span>
+        <span>언급 ${src}</span>
+        <span>연속 등재 <b>${r.streak}일</b></span>
+        ${hist}
+      </div>${det}</div>`;
+  }
   function nzDiv(mkt, rows) {
     if (!rows || !rows.length) return "";
     const talk = rows[0];
@@ -163,9 +181,11 @@
       : talk.t === earn.t
         ? `오늘은 말과 돈이 같은 곳 — <b>${esc(talk.n)}</b>`
         : `말은 <b>${esc(talk.n)}</b>(언급 ${talk.s}) · 돈은 <b>${esc(earn.n)}</b>`;
-    return `<div class="jrow"><span class="chip ${mkt}">${mkt.toUpperCase()}</span>
-      <span class="nm">${body}</span>
-      <span class="mono ${pctCls(earn.chg / 100)}" style="font-weight:600">${pct(earn.chg / 100)}</span></div>`;
+    const stocks = !(talk.s > 0) || talk.t === earn.t ? [earn] : [talk, earn];
+    return `<div class="crow"><div class="prow"><span class="chip ${mkt}">${mkt.toUpperCase()}</span>
+      <span class="nm">${body}<span class="rcaret">▾</span></span>
+      <span class="mono ${pctCls(earn.chg / 100)}" style="font-weight:600">${pct(earn.chg / 100)}</span></div>
+      <div class="cdet">${stocks.map((r) => nzStockBlk(r, mkt)).join("")}</div></div>`;
   }
   const nzEl = $("noise");
   if (nzEl) {
@@ -565,7 +585,7 @@
     const r = e.target.closest("tr.xrow");
     if (r) r.classList.toggle("open");
   }));
-  ["cands", "pulsebody"].forEach((id) => $(id).addEventListener("click", (e) => {
+  ["cands", "pulsebody", "nz-div"].forEach((id) => $(id).addEventListener("click", (e) => {
     const r = e.target.closest(".crow");
     if (r && !r.classList.contains("nodet")) r.classList.toggle("open");
   }));

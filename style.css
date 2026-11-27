@@ -3,8 +3,9 @@
   color-scheme: dark;
   --bg: #07090d; --panel: #0d1117; --panel2: #10151d;
   --line: #1e2633; --line2: #171e29;
-  --ink: #d7dde6; --ink2: #8a94a6; --mut: #566070;
+  --ink: #e2e8f1; --ink2: #9aa6ba; --mut: #677488;
   --amb: #ffa028; --amb-dim: #b06a14; --amb-bg: #1a1407;
+  --cy: #5fb8ff; --cy-dim: #2a567e;
   --up: #26d367; --up-bg: #0a1f12; --dn: #ff4d42; --dn-bg: #220d0c;
   --ok: #26d367; --warn: #ffa028; --halt: #ff4d42;
   --mono: "IBM Plex Mono", "Consolas", monospace;
@@ -18,9 +19,9 @@ body {
 /* CRT 스캔라인 + 필름 그레인 — 아주 옅게 */
 body::before { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 998;
   background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0, 0, 0, .18) 2px 3px);
-  opacity: .28; }
+  opacity: .14; }
 body::after { content: ""; position: fixed; inset: -50%; pointer-events: none; z-index: 999;
-  opacity: .05;
+  opacity: .03;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); }
 ::selection { background: var(--amb); color: #0a0a05; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -99,11 +100,14 @@ nav a.on { color: var(--amb); background: var(--bg); border-color: var(--line);
 main section.page { display: none; }
 main section.page.on { display: block; animation: fade .15s ease; }
 @keyframes fade { from { opacity: 0; } }
-h2 { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: .14em;
-  text-transform: uppercase; color: var(--amb); margin: 28px 0 2px;
-  display: flex; align-items: center; gap: 8px; }
-h2::before { content: "//"; color: var(--amb-dim); letter-spacing: 0; }
-.sub { font-size: 12px; color: var(--ink2); margin-bottom: 10px; }
+h2 { font-family: var(--mono); font-size: 14px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--amb); margin: 30px 0 3px;
+  display: flex; align-items: center; gap: 9px; }
+h2::before { content: "▶"; color: var(--up); font-size: 9px; letter-spacing: 0;
+  text-shadow: 0 0 7px rgba(38, 211, 103, .5); }
+h2::after { content: ""; flex: 1; height: 1px; margin-left: 4px;
+  background: linear-gradient(90deg, var(--amb-dim), rgba(176, 106, 20, 0)); opacity: .55; }
+.sub { font-size: 12.5px; color: var(--ink2); margin-bottom: 10px; line-height: 1.55; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 3px;
   padding: 12px 14px; margin-bottom: 10px; }
 .chip { display: inline-block; padding: 1px 7px; border-radius: 2px;
@@ -115,7 +119,7 @@ h2::before { content: "//"; color: var(--amb-dim); letter-spacing: 0; }
 .chip.warn { color: var(--warn); border-color: #5a3a10; background: var(--amb-bg); }
 .chip.halt { color: var(--halt); border-color: #5c1f1b; background: var(--dn-bg); }
 .pos { color: var(--up); } .neg { color: var(--dn); } .flat { color: var(--mut); }
-.mini { font-size: 11px; color: var(--mut); }
+.mini { font-size: 11.5px; color: var(--mut); }
 .note { font-size: 12px; color: var(--ink2); border-left: 2px solid var(--amb-dim);
   background: var(--panel2); padding: 8px 12px; margin: 8px 0; }
 .callout { font-size: 12.5px; border: 1px solid #5a3a10; border-left: 3px solid var(--amb);
@@ -130,10 +134,10 @@ h2::before { content: "//"; color: var(--amb-dim); letter-spacing: 0; }
 .nz .thead { display: flex; align-items: center; gap: 8px; }
 .nz .tname { font-weight: 600; font-size: 13px; }
 .nz .nzrow { display: flex; align-items: center; gap: 16px; margin-top: 10px; }
-.nz .nzv b { display: block; font-family: var(--mono); font-size: 26px; font-weight: 600;
+.nz .nzv b { display: block; font-family: var(--mono); font-size: 28px; font-weight: 600;
   line-height: 1.1; }
-.nz .nzv span { font-family: var(--mono); font-size: 9.5px; color: var(--mut);
-  text-transform: uppercase; letter-spacing: .06em; }
+.nz .nzv span { font-family: var(--mono); font-size: 10.5px; color: var(--ink2);
+  text-transform: uppercase; letter-spacing: .05em; }
 .nz .nzvs { font-family: var(--mono); font-size: 11px; color: var(--mut); }
 .nz .nzgap { margin-left: auto; font-family: var(--mono); font-size: 14px; font-weight: 600;
   border: 1px solid var(--line); background: var(--panel2); border-radius: 2px;
@@ -152,6 +156,15 @@ h2::before { content: "//"; color: var(--amb-dim); letter-spacing: 0; }
 @media (max-width: 600px) { .trow .tspark { display: none; } }
 
 .rcaret { color: var(--mut); font-size: 9px; margin-left: 5px; }
+
+/* 괴리 행 펼침 — 종목 상세 블록 */
+.nzstk { padding: 9px 0; border-bottom: 1px dashed var(--line2); }
+.nzstk:last-child { border-bottom: 0; padding-bottom: 2px; }
+.nzname { font-weight: 600; font-size: 13px; margin-bottom: 5px; }
+.nzname .tk { font-family: var(--mono); color: var(--mut); font-size: 11px; }
+.nzmeta { display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+  font-size: 12px; color: var(--ink2); margin-bottom: 7px; }
+.nzmeta b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
 .tcard { cursor: pointer; }
 .tcard:hover { border-color: var(--amb-dim); }
 .tcard .thead { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
@@ -164,12 +177,12 @@ h2::before { content: "//"; color: var(--amb-dim); letter-spacing: 0; }
 
 /* ── 표 공통 ─────────────────────────── */
 table.g { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-table.g th { font-family: var(--mono); text-align: right; font-size: 10px; font-weight: 600;
-  letter-spacing: .08em; text-transform: uppercase; color: var(--mut); padding: 4px 7px;
-  border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.g th { font-family: var(--mono); text-align: right; font-size: 10.5px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--cy); padding: 5px 7px;
+  border-bottom: 1px solid var(--cy-dim); white-space: nowrap; }
 table.g th:first-child, table.g td:first-child { text-align: left; }
 table.g td { padding: 6px 7px; border-bottom: 1px solid var(--line2); text-align: right;
-  white-space: nowrap; font-family: var(--mono); font-size: 12px; }
+  white-space: nowrap; font-family: var(--mono); font-size: 12.5px; }
 table.g td.nm { font-family: inherit; font-size: 13px; font-weight: 500; max-width: 200px;
   overflow: hidden; text-overflow: ellipsis; }
 table.g tr:last-child td { border-bottom: 0; }
