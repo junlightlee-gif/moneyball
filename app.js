@@ -804,7 +804,9 @@
       <div class="dsbar"><input id="ds-q" placeholder="회사명 · 키워드 검색">
       <select id="ds-t"><option value="all">전체</option><option value="review">예비심사</option>
       <option value="uw">주관계약</option><option value="fund">펀드만기</option></select>
-      <button id="ds-go">SEARCH ▸</button></div>
+      <button id="ds-go">SEARCH ▸</button>
+      <button id="ds-full" title="탭·재무필터·CSV를 갖춘 전체 스크리너">풀 스크리너 열기 ▸</button>
+      <span class="mini" id="ds-full-msg"></span></div>
       <div id="ds-res"></div>
       <div class="dpg" id="ds-pg" style="display:none">
       <button id="ds-prev">‹ 이전</button><span id="ds-info"></span><button id="ds-next">다음 ›</button></div></div>`;
@@ -814,6 +816,21 @@
     $("ds-q").addEventListener("keydown", (e) => { if (e.key === "Enter") go(1); });
     $("ds-prev").onclick = () => { if (DL.page > 1) go(DL.page - 1); };
     $("ds-next").onclick = () => { if (DL.page < DL.pages) go(DL.page + 1); };
+    $("ds-full").onclick = async () => {
+      const b = $("ds-full"), msg = $("ds-full-msg");
+      b.disabled = true; msg.textContent = "";
+      try {
+        // SSO: 토큰 → 세션 쿠키 발급 후 풀 스크리너 새 탭 (토큰을 URL에 싣지 않기 위함)
+        const res = await fetch(DAPI + "/api/sub/sso", {
+          method: "POST", credentials: "include",
+          headers: { "Authorization": "Bearer " + DL.token },
+        });
+        if (res.ok) window.open(DAPI + "/screener/", "_blank", "noopener");
+        else if (res.status === 401) { dLogout(); renderAuth(true); $("dg-msg").textContent = "세션이 만료됐습니다 — 다시 로그인해주세요"; return; }
+        else msg.textContent = res.status === 404 ? "풀 스크리너 준비 중" : "연결 실패 — 잠시 후 다시";
+      } catch (e) { msg.textContent = "연결 실패 — 잠시 후 다시"; }
+      b.disabled = false;
+    };
     dSearch(1);  // 로그인 즉시 전체 리스트 로드 (빈 검색어 = 전체)
   }
 
