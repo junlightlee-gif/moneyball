@@ -7,7 +7,7 @@
     const kill = () => { el.classList.add("off"); setTimeout(() => el.remove(), 400); };
     try { if (sessionStorage.getItem("mb_boot")) { el.remove(); return; } sessionStorage.setItem("mb_boot", "1"); } catch (e) {}
     const L = [
-      "MØNEYBALL <span class='dim'>v2.1 — terminal</span>",
+      "MØNEYBALL <span class='dim'>v2.1 terminal</span>",
       "> auth ......... <span class='dim'>ANONYMOUS</span>",
       "> feeds ........ <span class='dim'>KRX · NAVER · WSJ · MW</span>",
       "> models ....... <span class='dim'>MOMENTUM / SENTI / 4-TRACK</span>",
@@ -105,13 +105,13 @@
   const HL = [];
   const kLead = D.kr && D.kr.lead, uLead = D.lead;
   if (kLead && kLead.avg_talk != null && kLead.avg_zero != null)
-    HL.push(`KR 언급군 ${sgnp(kLead.avg_talk)} vs 무언급 ${sgnp(kLead.avg_zero)} — 합의 ${kLead.avg_talk >= kLead.avg_zero ? "우위" : "열위"}`);
+    HL.push(`KR 언급군 ${sgnp(kLead.avg_talk)} vs 무언급 ${sgnp(kLead.avg_zero)} · 합의 ${kLead.avg_talk >= kLead.avg_zero ? "우위" : "열위"}`);
   if (uLead && uLead.avg_talk != null && uLead.avg_zero != null)
-    HL.push(`US 언급군 ${sgnp(uLead.avg_talk)} vs 무언급 ${sgnp(uLead.avg_zero)} — 합의 ${uLead.avg_talk >= uLead.avg_zero ? "우위" : "열위"}`);
+    HL.push(`US 언급군 ${sgnp(uLead.avg_talk)} vs 무언급 ${sgnp(uLead.avg_zero)} · 합의 ${uLead.avg_talk >= uLead.avg_zero ? "우위" : "열위"}`);
   const RG = D.regime || {};
   ["kr", "us"].forEach((m) => {
     const r = RG[m];
-    if (r && r.bull === false) HL.push(`REGIME ${r.idx} < 200일선 — 신규 진입 중단 (현금 모드)`);
+    if (r && r.bull === false) HL.push(`REGIME ${r.idx} < 200일선, 신규 진입 중단(현금 모드)`);
   });
   if (D.flow && D.flow.kr && D.flow.kr.in && D.flow.kr.in[0]) {
     const f0 = D.flow.kr.in[0];
@@ -179,7 +179,7 @@
     const body = !(talk.s > 0)
       ? `오늘 언급 신호 없음 · 돈은 <b>${esc(earn.n)}</b>`
       : talk.t === earn.t
-        ? `오늘은 말과 돈이 같은 곳 — <b>${esc(talk.n)}</b>`
+        ? `오늘은 말과 돈이 같은 곳, <b>${esc(talk.n)}</b>`
         : `말은 <b>${esc(talk.n)}</b>(언급 ${talk.s}) · 돈은 <b>${esc(earn.n)}</b>`;
     const stocks = !(talk.s > 0) || talk.t === earn.t ? [earn] : [talk, earn];
     return `<div class="crow"><div class="prow"><span class="chip ${mkt}">${mkt.toUpperCase()}</span>
@@ -190,14 +190,14 @@
   const nzEl = $("noise");
   if (nzEl) {
     nzEl.innerHTML = nzCard("kr", kLead) + nzCard("us", uLead);
-    if (!nzEl.innerHTML) nzEl.innerHTML = "<div class='panel mini'>집계 준비 중 — 리더보드 데이터 누적 대기</div>";
+    if (!nzEl.innerHTML) nzEl.innerHTML = "<div class='panel mini'>집계 준비 중(리더보드 데이터 누적 대기)</div>";
     const dv = nzDiv("kr", D.kr && D.kr.today) + nzDiv("us", D.today);
     $("nz-div").innerHTML = dv
-      ? `<div class="panel">${dv}<div class="mini" style="padding-top:6px">오늘 스크린 통과 종목 중 — 최다 언급 vs 최고 수익. 둘이 다르면 소음과 신호가 갈라진 날.</div></div>` : "";
+      ? `<div class="panel">${dv}<div class="mini" style="padding-top:6px">오늘 스크린 통과 종목 중 최다 언급 vs 최고 수익. 둘이 다르면 소음과 신호가 갈라진 날.</div></div>` : "";
   }
 
   /* ── TODAY: 트랙 한 줄 요약 ── */
-  $("home-sub").textContent = P.length ? `페이퍼 4트랙 · KR ${krDay} / US ${usDay} 종가 기준 — 행 클릭 시 상세` : "데이터 준비 중";
+  $("home-sub").textContent = P.length ? `페이퍼 4트랙 · KR ${krDay} / US ${usDay} 종가 기준 · 행 클릭 시 상세` : "데이터 준비 중";
   $("tracks").innerHTML = P.map((t) => {
     const [stTxt, stCls] = STATUS[t.status];
     const vals = t.series.slice(-45).map((r) => r[1]);
@@ -234,11 +234,11 @@
       `<span class="chip ${r.bull ? "ok" : "halt"}">${r.idx} ${r.bull ? "▲ BULL" : "▼ BEAR"}</span>`).join(" ");
     const bears = regs.filter((r) => r.bull === false);
     if (bears.length) {
-      regEl.innerHTML = `<div class="callout">⚠ REGIME ${chips} —
+      regEl.innerHTML = `<div class="callout">⚠ REGIME ${chips} ·
         ${bears.map((r) => `${r.idx} 200일선 아래 (기준 ${r.asof})`).join(" · ")}.
         사전등록 규칙에 따라 해당 시장은 신규 진입·스캔을 멈추고 현금 모드로 대기합니다. 보유 종목 관리는 계속됩니다.</div>`;
     } else if (regs.length) {
-      regEl.innerHTML = `<div class="note">REGIME ${chips} — 지수 200일선 위, 신규 진입 스캔 가동 중.</div>`;
+      regEl.innerHTML = `<div class="note">REGIME ${chips} · 지수 200일선 위, 신규 진입 스캔 가동 중.</div>`;
     }
   }
 
@@ -324,7 +324,7 @@
       const hits = Object.entries(cnt).filter(([, th]) => th.length >= 3)
         .sort((a, b) => b[1].length - a[1].length).slice(0, 2);
       mg = hits.map(([nm, th]) =>
-        `<div class="callout">⚠ MAGNET — <b>${esc(nm)}</b>이(가) 상위 테마 ${th.length}곳의 주도주.
+        `<div class="callout">⚠ MAGNET · <b>${esc(nm)}</b>이(가) 상위 테마 ${th.length}곳의 주도주.
          테마 수급이 아니라 종목 개별 이슈가 여러 테마 수치를 끌어올렸을 가능성.</div>`).join("");
     }
     $("magnet").innerHTML = mg;
@@ -338,7 +338,7 @@
 
   /* ── TODAY: 하이라이트 + 최근 체결 ── */
   if (F) {
-    $("hl-sub").textContent = `KR ${F.kr.day} 쏠림 상위 — 전체는 FLOWS 탭`;
+    $("hl-sub").textContent = `KR ${F.kr.day} 쏠림 상위 · 전체는 FLOWS 탭`;
     $("highlights").innerHTML = F.kr.in.slice(0, 3).map((r, i) => flowRow(r, i, "kr")).join("");
   }
   const allJr = P.flatMap((t) => t.journal.map((j) => ({ ...j, label: t.label, mkt: t.mkt })))
@@ -418,9 +418,9 @@
     const cdate = t.mkt === "kr" ? (D.kr && D.kr.updated) : D.updated;
     const rgT = RG[t.mkt];
     const bearNote = rgT && rgT.bull === false
-      ? ` · 약세장 현금 모드(${rgT.idx} < 200일선) — 신규 후보 스캔 중단` : "";
+      ? ` · 약세장 현금 모드(${rgT.idx} < 200일선), 신규 후보 스캔 중단` : "";
     $("cand-sub").textContent = cand.length
-      ? `스크린 통과 종목 ${cand.length}개 (${cdate} 기준)${bearNote} — ★ = 매수 예약`
+      ? `스크린 통과 종목 ${cand.length}개 (${cdate} 기준)${bearNote} · ★ = 매수 예약`
       : `스크린 통과 종목 없음${bearNote} (마지막 ${cdate || "—"})`;
     const pendSet = new Set(pend.filter((o) => o.type === "buy").map((o) => o.t));
     $("cands").innerHTML = cand.length ? cand.slice(0, 15).map((r) => {
@@ -509,7 +509,7 @@
   function pulseLead(lead, mkt) {
     if (!lead || !lead.rows.length) return "";
     const note = lead.avg_talk != null
-      ? `<div class="note">첫 등재 후 평균 수익률 — 언급 종목 ${lead.avg_talk > 0 ? "+" : ""}${lead.avg_talk}% (${lead.n_talk}개)` +
+      ? `<div class="note">첫 등재 후 평균 수익률: 언급 종목 ${lead.avg_talk > 0 ? "+" : ""}${lead.avg_talk}% (${lead.n_talk}개)` +
         (lead.avg_zero != null ? ` vs 무언급 ${lead.avg_zero > 0 ? "+" : ""}${lead.avg_zero}% (${lead.n_zero}개)` : "") + `</div>` : "";
     return `<h2>Leaderboard</h2>${note}<div class="panel">` +
       lead.rows.slice(0, 15).map((r) => {
@@ -525,14 +525,14 @@
     const body = $("pulsebody");
     const bear = (m) => RG[m] && RG[m].bull === false;
     if (mkt === "us") {
-      $("pulse-sub").textContent = `미국 — 전략 통과 종목의 소셜 언급 집계` + (bear("us")
-        ? ` · 약세장 현금 모드(S&P500 < 200일선) — 신규 스캔 대기, 마지막 후보 ${D.updated}`
+      $("pulse-sub").textContent = `미국 · 전략 통과 종목의 소셜 언급 집계` + (bear("us")
+        ? ` · 약세장 현금 모드(S&P500 < 200일선), 신규 스캔 대기, 마지막 후보 ${D.updated}`
         : ` (마지막 수집 ${D.updated})`);
       body.innerHTML = `<div class="panel">${pulseRows(D.today || [], "us")}</div>` + pulseLead(D.lead, "us");
     } else {
       const K = D.kr || {};
-      $("pulse-sub").textContent = `한국 — 뉴스·커뮤니티 언급 집계 (${K.updated || "—"})` + (bear("kr")
-        ? ` · 약세장 현금 모드(KOSPI < 200일선) — 신규 진입은 중단, 언급 집계는 계속` : "");
+      $("pulse-sub").textContent = `한국 · 뉴스·커뮤니티 언급 집계 (${K.updated || "—"})` + (bear("kr")
+        ? ` · 약세장 현금 모드(KOSPI < 200일선), 신규 진입은 중단하고 언급 집계는 계속` : "");
       body.innerHTML = `<div class="panel">${pulseRows(K.today || [], "kr")}</div>` + pulseLead(K.lead, "kr");
     }
   }
@@ -568,7 +568,7 @@
              <div class="nmeta">${esc(nw.ts)} ${nw.src ? "· <b>" + esc(nw.src) + "</b>" : ""}</div>
              <div class="nt">${esc(nw.t)}</div></a>`
                : `<div class="nt" style="padding-top:6px">${esc(nw.t)}</div>`)
-        : `<div class="mini" style="padding-top:6px">연결된 당일 기사 없음 — 수급 오귀속 또는 무재료 쏠림 가능성</div>`;
+        : `<div class="mini" style="padding-top:6px">연결된 당일 기사 없음. 수급 오귀속 또는 무재료 쏠림 가능성</div>`;
       return `<div class="panel">
         <div class="fname"><span class="chip ${esc(x.mkt)}">${esc(x.mkt.toUpperCase())}</span>
           ${themes} ${heat}
@@ -716,12 +716,12 @@
     sc.onload = () => {
       if (!window.SKETCH_DATA || window.SKETCH_DATA.v !== 2) { // 구버전 데이터 가드
         window.SKETCH_DATA = null; SK.loading = false;
-        $("sk-hint").textContent = "서버 데이터 갱신 대기 중 — 잠시 후 새로고침 해주세요";
+        $("sk-hint").textContent = "서버 데이터 갱신 대기 중입니다. 잠시 후 새로고침 해주세요";
         return;
       }
-      $("sk-hint").textContent = "준비 완료 — SCAN을 누르세요"; cb();
+      $("sk-hint").textContent = "준비 완료. SCAN을 누르세요"; cb();
     };
-    sc.onerror = () => { $("sk-hint").textContent = "데이터 로드 실패 — 새로고침 해보세요"; SK.loading = false; };
+    sc.onerror = () => { $("sk-hint").textContent = "데이터 로드 실패. 새로고침 해보세요"; SK.loading = false; };
     document.body.appendChild(sc);
   }
 
@@ -797,9 +797,9 @@
     if (SK.pts.length < 5) { $("sk-hint").textContent = "먼저 모양을 그려주세요"; return; }
     if (!window.SKETCH_DATA) { skLoad(skRun); return; }
     const t32 = skTarget();
-    if (!t32) { $("sk-hint").textContent = "선이 너무 짧습니다 — 더 길게 그려주세요"; return; }
+    if (!t32) { $("sk-hint").textContent = "선이 너무 짧습니다. 더 길게 그려주세요"; return; }
     const tz = skZ(t32), tdz = skDz(t32);
-    if (!tz || !tdz) { $("sk-hint").textContent = "선이 너무 평평합니다 — 모양을 그려주세요"; return; }
+    if (!tz || !tdz) { $("sk-hint").textContent = "선이 너무 평평합니다. 모양을 그려주세요"; return; }
     const tf = skSel("sk-tf"), mk = skSel("sk-mkt"), nb = skBars(tf);
     const mkts = mk === "all" ? ["kr", "us"] : [mk];
     const hits = [];
@@ -823,7 +823,7 @@
     const show = pass.length ? pass.slice(0, 30) : hits.slice(0, 5);
     $("sk-hint").textContent = pass.length
       ? `${comma(scanned)}종목 중 ${pass.length}종목 일치 (${tfName} ${nb}봉 · 유사도 ≥ ${SK_MIN * 100}%)`
-      : `${comma(scanned)}종목 중 유사도 ${SK_MIN * 100}% 이상 없음 — 가장 가까운 5종목만 표시 (${tfName} ${nb}봉)`;
+      : `${comma(scanned)}종목 중 유사도 ${SK_MIN * 100}% 이상 없음. 가장 가까운 5종목만 표시 (${tfName} ${nb}봉)`;
     const tgtMinMax = skMinMax(t32);
     const iv = { d: "D", w: "W", m: "M" }[tf];
     $("sk-res").innerHTML = show.map(([r, m, i], rank) => {
@@ -840,7 +840,7 @@
         <span class="meta num">${fmtPx(m, S.px[i])} <span class="${pctCls(S.chg[i] / 100)}">${pct(S.chg[i] / 100)}</span></span>
         <span class="ov">${skOverlay(tgtMinMax, ser, S.chg[i])}</span></div>
       <div class="skdet"><div class="sklink"><a href="${url}" target="_blank" rel="noopener">${m === "kr" ? "네이버 증권" : "Yahoo Finance"} ↗</a></div><div class="skifr"></div></div>`;
-    }).join("") || "<div class='panel mini'>결과 없음 — 봉 수를 줄이거나 다른 시장을 선택해 보세요</div>";
+    }).join("") || "<div class='panel mini'>결과 없음. 봉 수를 줄이거나 다른 시장을 선택해 보세요</div>";
   }
 
   function skMinMax(z) {
@@ -910,9 +910,9 @@
       $("wl-btn").disabled = true;
       const r = await dApi("/api/public/waitlist", { body: { email: em } });
       $("wl-btn").disabled = false;
-      $("wl-msg").textContent = r.ok ? "신청 완료 — 검토 후 이메일로 안내드립니다"
-        : r.status === 429 ? "요청이 너무 잦습니다 — 잠시 후 다시 시도해주세요"
-        : "접수 실패 — 잠시 후 다시 시도해주세요";
+      $("wl-msg").textContent = r.ok ? "신청 완료. 검토 후 이메일로 안내드립니다"
+        : r.status === 429 ? "요청이 너무 잦습니다. 잠시 후 다시 시도해주세요"
+        : "접수 실패. 잠시 후 다시 시도해주세요";
       if (r.ok) $("wl-email").value = "";
     };
     $("d-login").onclick = (e) => { e.preventDefault(); renderAuth(true); };
@@ -926,7 +926,7 @@
       $("dl-rows").innerHTML = r.data.rows.map(dRow).join("");
       $("dl-asof").textContent = r.data.asof ? "as of " + r.data.asof : "";
     } else {
-      $("dl-rows").innerHTML = "<div class='mini' style='padding:10px'>라이브 샘플 준비 중 — 백엔드 연결 대기</div>";
+      $("dl-rows").innerHTML = "<div class='mini' style='padding:10px'>라이브 샘플 준비 중(백엔드 연결 대기)</div>";
     }
   }
 
@@ -949,7 +949,7 @@
       const r = await dApi("/api/auth/request", { body: { email: em } });
       $("dg-req").disabled = false;
       if (r.ok) { $("dg-step2").style.display = ""; $("dg-msg").textContent = "등록된 이메일이면 인증코드가 발송됩니다"; }
-      else $("dg-msg").textContent = r.status === 429 ? "요청이 너무 잦습니다" : "요청 실패 — 잠시 후 다시";
+      else $("dg-msg").textContent = r.status === 429 ? "요청이 너무 잦습니다" : "요청 실패. 잠시 후 다시";
     };
     $("dg-ok").onclick = async () => {
       const em = $("dg-em").value.trim(), code = $("dg-code").value.trim();
@@ -958,7 +958,7 @@
         DL.token = r.data.token; DL.email = em;
         try { localStorage.setItem("mb_dsub", JSON.stringify({ token: r.data.token, email: em, exp: r.data.exp || Date.now() + 864e5 })); } catch (e) {}
         renderSearch();
-      } else $("dg-msg").textContent = "인증 실패 — 코드를 확인해주세요";
+      } else $("dg-msg").textContent = "인증 실패. 코드를 확인해주세요";
     };
   }
 
@@ -972,7 +972,7 @@
   function renderSearch() {
     dGate(true);  // 구독자: 잠금·구독유도 제거, 전체 리스트 모드
     $("dsearch").innerHTML = `<div class="dlog">
-      <div class="dwho"><span>// FULL ACCESS — ${esc(DL.email || "")}</span><a href="#deals" id="dg-out">로그아웃</a></div>
+      <div class="dwho"><span>// FULL ACCESS · ${esc(DL.email || "")}</span><a href="#deals" id="dg-out">로그아웃</a></div>
       <div class="dsbar"><input id="ds-q" placeholder="회사명 · 키워드 검색">
       <select id="ds-t"><option value="all">전체</option><option value="review">예비심사</option>
       <option value="uw">주관계약</option><option value="fund">펀드만기</option></select>
@@ -1006,9 +1006,9 @@
     const q = $("ds-q").value.trim(), t = $("ds-t").value;
     $("ds-res").innerHTML = "<div class='mini' style='padding:8px'>검색 중…</div>";
     const r = await dApi(`/api/sub/search?q=${encodeURIComponent(q)}&type=${t}&page=${page}`, { auth: true });
-    if (r.status === 401) { dLogout(); renderAuth(true); $("dg-msg").textContent = "세션이 만료됐습니다 — 다시 로그인해주세요"; return; }
-    if (r.status === 429) { $("ds-res").innerHTML = "<div class='mini' style='padding:8px'>요청이 너무 잦습니다 — 잠시 후 다시</div>"; return; }
-    if (!r.ok) { $("ds-res").innerHTML = "<div class='mini' style='padding:8px'>검색 실패 — 잠시 후 다시 시도해주세요</div>"; return; }
+    if (r.status === 401) { dLogout(); renderAuth(true); $("dg-msg").textContent = "세션이 만료됐습니다. 다시 로그인해주세요"; return; }
+    if (r.status === 429) { $("ds-res").innerHTML = "<div class='mini' style='padding:8px'>요청이 너무 잦습니다. 잠시 후 다시</div>"; return; }
+    if (!r.ok) { $("ds-res").innerHTML = "<div class='mini' style='padding:8px'>검색 실패. 잠시 후 다시 시도해주세요</div>"; return; }
     const rows = r.data.rows || [];
     DL.page = r.data.page || page; DL.pages = r.data.pages || 1;
     $("ds-res").innerHTML = rows.length
