@@ -716,6 +716,12 @@
       <span class="dmeta">${esc(r.date || "")}${r.extra ? " · " + esc(r.extra) : ""}</span></div>`;
   }
 
+  function dGate(sub) {  // sub=구독자: 잠금·구독유도·티저 숨기고 전체 리스트 모드
+    ["dlock", "dcta", "dl-rows"].forEach((id) => { const el = $(id); if (el) el.style.display = sub ? "none" : ""; });
+    const h = document.querySelector("#p-deals .dlhead");
+    if (h) h.style.display = sub ? "none" : "";
+  }
+
   function dealsInit() {
     if (DL.init) return;
     DL.init = true;
@@ -788,9 +794,11 @@
     DL.token = null; DL.email = null;
     try { localStorage.removeItem("mb_dsub"); } catch (e) {}
     $("dsearch").innerHTML = "";
+    dGate(false);  // 잠금·티저 복원
   }
 
   function renderSearch() {
+    dGate(true);  // 구독자: 잠금·구독유도 제거, 전체 리스트 모드
     $("dsearch").innerHTML = `<div class="dlog">
       <div class="dwho"><span>// FULL ACCESS — ${esc(DL.email || "")}</span><a href="#deals" id="dg-out">로그아웃</a></div>
       <div class="dsbar"><input id="ds-q" placeholder="회사명 · 키워드 검색">
@@ -806,6 +814,7 @@
     $("ds-q").addEventListener("keydown", (e) => { if (e.key === "Enter") go(1); });
     $("ds-prev").onclick = () => { if (DL.page > 1) go(DL.page - 1); };
     $("ds-next").onclick = () => { if (DL.page < DL.pages) go(DL.page + 1); };
+    dSearch(1);  // 로그인 즉시 전체 리스트 로드 (빈 검색어 = 전체)
   }
 
   async function dSearch(page) {
