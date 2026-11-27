@@ -816,20 +816,16 @@
     $("ds-q").addEventListener("keydown", (e) => { if (e.key === "Enter") go(1); });
     $("ds-prev").onclick = () => { if (DL.page > 1) go(DL.page - 1); };
     $("ds-next").onclick = () => { if (DL.page < DL.pages) go(DL.page + 1); };
-    $("ds-full").onclick = async () => {
-      const b = $("ds-full"), msg = $("ds-full-msg");
-      b.disabled = true; msg.textContent = "";
-      try {
-        // SSO: 토큰 → 세션 쿠키 발급 후 풀 스크리너 새 탭 (토큰을 URL에 싣지 않기 위함)
-        const res = await fetch(DAPI + "/api/sub/sso", {
-          method: "POST", credentials: "include",
-          headers: { "Authorization": "Bearer " + DL.token },
-        });
-        if (res.ok) window.open(DAPI + "/screener/", "_blank", "noopener");
-        else if (res.status === 401) { dLogout(); renderAuth(true); $("dg-msg").textContent = "세션이 만료됐습니다 — 다시 로그인해주세요"; return; }
-        else msg.textContent = res.status === 404 ? "풀 스크리너 준비 중" : "연결 실패 — 잠시 후 다시";
-      } catch (e) { msg.textContent = "연결 실패 — 잠시 후 다시"; }
-      b.disabled = false;
+    $("ds-full").onclick = () => {
+      // 최상위 탐색 POST로 세션 쿠키 발급 후 /screener/ 진입 — Safari 등 3자 쿠키 차단·팝업 차단 대응
+      // (클릭 핸들러 안 동기 submit 필수, 토큰은 body로만 전달)
+      const f = document.createElement("form");
+      f.method = "POST"; f.action = DAPI + "/screener/sso"; f.target = "_blank";
+      f.style.display = "none";
+      const i = document.createElement("input");
+      i.type = "hidden"; i.name = "token"; i.value = DL.token || "";
+      f.appendChild(i); document.body.appendChild(f);
+      f.submit(); f.remove();
     };
     dSearch(1);  // 로그인 즉시 전체 리스트 로드 (빈 검색어 = 전체)
   }
